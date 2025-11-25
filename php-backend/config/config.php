@@ -5,12 +5,14 @@
 
 // CORS Configuration
 define('ALLOWED_ORIGINS', [
+    // Development
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:5173', // Vite default port
     'http://localhost:5174', // Vite alternate port
-    // Tambahkan domain production Anda di sini
-    // 'https://yourdomain.com',
+    // Production
+    'https://aicjatibening.com',
+    'https://www.aicjatibening.com',
 ]);
 
 // JWT Secret (gunakan yang sama dengan NEXTAUTH_SECRET jika ada)

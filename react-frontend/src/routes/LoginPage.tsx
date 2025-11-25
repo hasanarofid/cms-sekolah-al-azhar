@@ -59,11 +59,11 @@ export default function LoginPage() {
       <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
         <h1 className="text-3xl font-bold text-center mb-8">Admin Login</h1>
         
-        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded mb-4 text-sm">
+        {/* <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded mb-4 text-sm">
           <strong>Default Credentials:</strong><br />
           Email: admin@example.com<br />
           Password: admin123
-        </div>
+        </div> */}
         
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">

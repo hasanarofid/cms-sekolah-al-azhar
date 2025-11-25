@@ -39,8 +39,8 @@ export function ContactForm() {
       await apiClient.post('/contact', data, false) // false = tidak perlu auth
       setSuccess(true)
       reset()
-    } catch (err: any) {
-      setError(err.message || 'Terjadi kesalahan saat mengirim pesan')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Terjadi kesalahan saat mengirim pesan')
     } finally {
       setIsLoading(false)
     }

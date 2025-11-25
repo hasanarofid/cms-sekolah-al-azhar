@@ -95,20 +95,34 @@ class SliderController extends BaseController
 
         $data = $this->getJsonInput();
 
+        // Prepare update data - use provided values or keep existing
+        $updateData = [
+            'title' => $data['title'] ?? $existing['title'],
+            'titleEn' => isset($data['titleEn']) ? ($data['titleEn'] ?: null) : $existing['titleEn'],
+            'subtitle' => isset($data['subtitle']) ? ($data['subtitle'] ?: null) : $existing['subtitle'],
+            'subtitleEn' => isset($data['subtitleEn']) ? ($data['subtitleEn'] ?: null) : $existing['subtitleEn'],
+            'image' => $data['image'] ?? $existing['image'],
+            'buttonText' => isset($data['buttonText']) ? ($data['buttonText'] ?: null) : $existing['buttonText'],
+            'buttonTextEn' => isset($data['buttonTextEn']) ? ($data['buttonTextEn'] ?: null) : $existing['buttonTextEn'],
+            'buttonUrl' => isset($data['buttonUrl']) ? ($data['buttonUrl'] ?: null) : $existing['buttonUrl'],
+            'order' => isset($data['order']) ? (int)$data['order'] : $existing['order'],
+            'isActive' => isset($data['isActive']) ? ($data['isActive'] ? 1 : 0) : $existing['isActive'],
+        ];
+
         $this->db->query(
             'UPDATE Slider SET title = ?, titleEn = ?, subtitle = ?, subtitleEn = ?, image = ?, 
              buttonText = ?, buttonTextEn = ?, buttonUrl = ?, `order` = ?, isActive = ? WHERE id = ?',
             [
-                $data['title'] ?? $existing['title'],
-                $data['titleEn'] ?? $existing['titleEn'],
-                $data['subtitle'] ?? $existing['subtitle'],
-                $data['subtitleEn'] ?? $existing['subtitleEn'],
-                $data['image'] ?? $existing['image'],
-                $data['buttonText'] ?? $existing['buttonText'],
-                $data['buttonTextEn'] ?? $existing['buttonTextEn'],
-                $data['buttonUrl'] ?? $existing['buttonUrl'],
-                $data['order'] ?? $existing['order'],
-                isset($data['isActive']) ? ($data['isActive'] ? 1 : 0) : $existing['isActive'],
+                $updateData['title'],
+                $updateData['titleEn'],
+                $updateData['subtitle'],
+                $updateData['subtitleEn'],
+                $updateData['image'],
+                $updateData['buttonText'],
+                $updateData['buttonTextEn'],
+                $updateData['buttonUrl'],
+                $updateData['order'],
+                $updateData['isActive'],
                 $id,
             ]
         );

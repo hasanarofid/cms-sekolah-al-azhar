@@ -87,10 +87,11 @@ if (preg_match('#^/uploads/#', $path)) {
         header('Cache-Control: public, max-age=31536000'); // Cache for 1 year
         
         // CORS headers untuk images
-        $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
-        if (in_array($origin, ALLOWED_ORIGINS)) {
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+        if ($origin && in_array($origin, ALLOWED_ORIGINS)) {
             header('Access-Control-Allow-Origin: ' . $origin);
         } else {
+            // Untuk static files, izinkan semua origin (images biasanya tidak perlu credentials)
             header('Access-Control-Allow-Origin: *');
         }
         header('Access-Control-Allow-Methods: GET, OPTIONS');
@@ -186,9 +187,9 @@ $routes = [
     // Admin - Sliders
     'api/admin/sliders' => 'SliderController@index',
     'api/admin/sliders/create' => 'SliderController@create',
-    'api/admin/sliders/([a-zA-Z0-9]+)' => 'SliderController@show',
-    'api/admin/sliders/([a-zA-Z0-9]+)/update' => 'SliderController@update',
-    'api/admin/sliders/([a-zA-Z0-9]+)/delete' => 'SliderController@delete',
+    'api/admin/sliders/([a-zA-Z0-9]+)' => 'SliderController@show', // GET untuk show, PUT untuk update, DELETE untuk delete
+    'api/admin/sliders/([a-zA-Z0-9]+)/update' => 'SliderController@update', // Fallback untuk POST dengan _method
+    'api/admin/sliders/([a-zA-Z0-9]+)/delete' => 'SliderController@delete', // Fallback untuk POST dengan _method
     
     // Admin - FAQs
     'api/admin/faqs' => 'FAQController@index',
@@ -261,6 +262,23 @@ foreach ($routes as $pattern => $handler) {
     
     if (class_exists($controllerClass)) {
         $controller = new $controllerClass();
+        
+        // RESTful routing: Check HTTP method untuk resource routes dengan ID
+        // Jika route adalah show tapi HTTP method adalah PUT/DELETE, gunakan method yang sesuai
+        if (count($matches) > 0 && $method === 'show') {
+            $httpMethod = strtoupper($_SERVER['REQUEST_METHOD']);
+            if ($httpMethod === 'POST' && isset($_POST['_method'])) {
+                $httpMethod = strtoupper($_POST['_method']);
+            }
+            
+            // Override method berdasarkan HTTP method untuk RESTful API
+            if ($httpMethod === 'PUT' && method_exists($controller, 'update')) {
+                $method = 'update';
+            } elseif ($httpMethod === 'DELETE' && method_exists($controller, 'delete')) {
+                $method = 'delete';
+            }
+        }
+        
         if (method_exists($controller, $method)) {
             call_user_func_array([$controller, $method], $matches);
             $matched = true;

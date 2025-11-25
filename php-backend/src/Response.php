@@ -10,19 +10,27 @@ class Response
         header('Content-Type: application/json; charset=utf-8');
         
         // CORS headers
-        $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
-        if (in_array($origin, ALLOWED_ORIGINS)) {
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+        $appEnv = getenv('APP_ENV') ?: 'development';
+        
+        // Jika origin ada di ALLOWED_ORIGINS, set header dengan origin tersebut
+        // Ini penting untuk credentials (cookies, auth headers)
+        // Catatan: Ketika menggunakan credentials: true, tidak bisa pakai wildcard (*)
+        if ($origin && in_array($origin, ALLOWED_ORIGINS)) {
             header("Access-Control-Allow-Origin: $origin");
+            header('Access-Control-Allow-Credentials: true');
         } else {
-            // Untuk development, izinkan semua origin jika tidak ada di list
-            // Di production, hapus baris ini dan pastikan semua origin ada di ALLOWED_ORIGINS
-            if (getenv('APP_ENV') !== 'production') {
+            // Fallback: jika tidak ada origin atau tidak di list
+            if ($appEnv !== 'production') {
+                // Development: izinkan semua origin (tanpa credentials)
                 header('Access-Control-Allow-Origin: *');
             }
+            // Production: jika origin tidak di list, tidak set header (akan ditolak browser)
+            // Ini untuk keamanan
         }
+        
         header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
         header('Access-Control-Allow-Headers: Content-Type, Authorization');
-        header('Access-Control-Allow-Credentials: true');
         header('Access-Control-Max-Age: 86400');
 
         echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
