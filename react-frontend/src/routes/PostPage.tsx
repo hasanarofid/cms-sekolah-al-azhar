@@ -1,0 +1,195 @@
+import { useEffect, useState } from 'react'
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom'
+import { Navigation } from '../components/Navigation'
+import { Footer } from '../components/Footer'
+import { WhatsAppButton } from '../components/WhatsAppButton'
+import { apiClient } from '../lib/api-client'
+import { Search, ChevronRight } from 'lucide-react'
+
+export default function PostPage() {
+  const params = useParams()
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const slug = params?.slug as string
+  const locale = (searchParams.get('locale') as 'id' | 'en') || 'id'
+
+  const [post, setPost] = useState<any>(null)
+  const [menus, setMenus] = useState<any[]>([])
+  const [settings, setSettings] = useState<any>({})
+  const [latestPosts, setLatestPosts] = useState<any[]>([])
+  const [nextPost, setNextPost] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [postData, menusData, settingsData, postsData] = await Promise.all([
+          apiClient.get(`/admin/posts`).then((posts: any[]) => posts.find((p: any) => p.slug === slug && p.isPublished)),
+          apiClient.get('/admin/menus'),
+          apiClient.get('/admin/settings').then((s: any[]) => {
+            const obj: any = {}
+            s.forEach((item: any) => { obj[item.key] = item })
+            return obj
+          }),
+          apiClient.get('/admin/posts').then((posts: any[]) => posts.filter((p: any) => p.isPublished)),
+        ])
+
+        if (!postData) {
+          navigate('/404')
+          return
+        }
+
+        setPost(postData)
+        setMenus(menusData.filter((m: any) => !m.parentId && m.isActive))
+        
+        const publishedPosts = postsData.sort((a: any, b: any) => 
+          new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime()
+        )
+        const currentIndex = publishedPosts.findIndex((p: any) => p.id === postData.id)
+        setNextPost(currentIndex > 0 ? publishedPosts[currentIndex - 1] : null)
+        setLatestPosts(publishedPosts.filter((p: any) => p.id !== postData.id).slice(0, 5))
+        setSettings(settingsData)
+      } catch (error) {
+        console.error('Error loading data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (slug) {
+      loadData()
+    }
+  }, [slug, navigate])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!post) {
+    return null
+  }
+
+  return (
+    <div className="min-h-screen">
+      <Navigation 
+        menus={menus} 
+        locale={locale}
+        logo={settings.website_logo?.value || null}
+        websiteName={settings.website_title?.value || null}
+        showWebsiteName={settings.show_website_name?.value === 'true'}
+      />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <article className="lg:col-span-2">
+            {post.featuredImage && (
+              <div className="mb-8">
+                <img
+                  src={post.featuredImage}
+                  alt={post.title}
+                  className="w-full h-auto object-cover rounded-lg"
+                />
+              </div>
+            )}
+
+            <header className="mb-8">
+              <h1 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
+                {locale === 'en' && post.titleEn ? post.titleEn : post.title}
+              </h1>
+              <div className="flex items-center space-x-4 text-gray-600 text-sm">
+                <span>{post.publishedAt && new Date(post.publishedAt).toLocaleDateString('id-ID', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</span>
+                <span>•</span>
+                <span>{post.category || 'alazhar'}</span>
+              </div>
+            </header>
+
+            <div
+              className="prose prose-lg max-w-none mb-8"
+              dangerouslySetInnerHTML={{
+                __html: locale === 'en' && post.contentEn ? post.contentEn : post.content
+              }}
+            />
+
+            {nextPost && (
+              <div className="mt-12 pt-8 border-t border-gray-200">
+                <Link 
+                  to={`/berita/${nextPost.slug}`}
+                  className="flex items-center text-primary-600 hover:text-primary-700 font-medium"
+                >
+                  <span>Next</span>
+                  <ChevronRight size={20} className="ml-2" />
+                  <span className="ml-2">
+                    {locale === 'en' && nextPost.titleEn ? nextPost.titleEn : nextPost.title}
+                  </span>
+                </Link>
+              </div>
+            )}
+          </article>
+
+          <aside className="lg:col-span-1">
+            <div className="mb-8">
+              <form className="flex">
+                <input
+                  type="search"
+                  placeholder="Cari..."
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+                <button
+                  type="submit"
+                  className="bg-orange-500 text-white px-4 py-2 rounded-r-lg hover:bg-orange-600 transition-colors"
+                >
+                  <Search size={20} />
+                </button>
+              </form>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <h3 className="text-xl font-bold mb-4 text-gray-900">Berita Terbaru</h3>
+              <ul className="space-y-3">
+                {latestPosts.map((latestPost: any) => (
+                  <li key={latestPost.id}>
+                    <Link
+                      to={`/berita/${latestPost.slug}`}
+                      className="text-gray-700 hover:text-primary-600 transition-colors block"
+                    >
+                      {locale === 'en' && latestPost.titleEn ? latestPost.titleEn : latestPost.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <Footer 
+        locale={locale}
+        address={settings.footer_address?.value || null}
+        phone={settings.footer_phone?.value || null}
+        email={settings.footer_email?.value || null}
+        androidAppUrl={settings.android_app_url?.value || null}
+        iosAppUrl={settings.ios_app_url?.value || null}
+        facebookUrl={settings.facebook_url?.value || null}
+        instagramUrl={settings.instagram_url?.value || null}
+        youtubeUrl={settings.youtube_url?.value || null}
+      />
+
+      <WhatsAppButton 
+        phoneNumber={settings.whatsapp_phone?.value || null}
+        defaultMessage={settings.whatsapp_message?.value || null}
+      />
+    </div>
+  )
+}
+

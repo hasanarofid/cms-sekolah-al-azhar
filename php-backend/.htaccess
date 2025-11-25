@@ -1,0 +1,27 @@
+# Enable Rewrite Engine
+RewriteEngine On
+
+# Base directory for rewrite (adjust if needed)
+RewriteBase /
+
+# If the request is for a file or directory that exists, serve it
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Route all other requests to public/index.php
+RewriteRule ^(.*)$ public/index.php [QSA,L]
+
+# Security: Prevent access to sensitive files
+<FilesMatch "^(\.env|composer\.(json|lock)|\.git)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+

@@ -1,0 +1,249 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  role          String    @default("admin")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  pages         Page[]
+  posts         Post[]
+  media         Media[]
+}
+
+model Menu {
+  id            String    @id @default(cuid())
+  title         String
+  titleEn       String?
+  slug          String    @unique
+  parentId      String?
+  parent        Menu?     @relation("MenuChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children      Menu[]    @relation("MenuChildren")
+  pages         Page[]
+  order         Int       @default(0)
+  isActive      Boolean   @default(true)
+  menuType      String    @default("page") // 'page', 'external', 'category', 'post-list'
+  externalUrl   String?   // For external links
+  icon          String?   // Icon name or class
+  description   String?   // Menu description
+  descriptionEn String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Page {
+  id            String    @id @default(cuid())
+  title         String
+  titleEn       String?
+  slug          String    @unique
+  content       String
+  contentEn     String?
+  excerpt       String?
+  excerptEn     String?
+  featuredImage String?
+  menuId        String?
+  menu          Menu?     @relation(fields: [menuId], references: [id], onDelete: SetNull)
+  pageType      String    @default("standard") // 'standard', 'program', 'facility', 'academic'
+  template      String?   // Template name for custom layouts
+  seoTitle      String?
+  seoDescription String?
+  seoKeywords    String?
+  isPublished   Boolean   @default(false)
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id])
+  blocks        PageBlock[]
+}
+
+model Post {
+  id            String    @id @default(cuid())
+  title         String
+  titleEn       String?
+  slug          String    @unique
+  content       String
+  contentEn     String?
+  excerpt       String?
+  excerptEn     String?
+  featuredImage String?
+  category      String?   // Legacy field, keep for backward compatibility
+  categoryId    String?
+  categoryRel   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags          String    // JSON string array
+  postType      String    @default("post") // 'post', 'article', 'testimonial', 'event', 'gallery'
+  isPublished   Boolean   @default(false)
+  publishedAt   DateTime?
+  views         Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id])
+}
+
+model Media {
+  id            String    @id @default(cuid())
+  filename      String
+  originalName  String
+  mimeType      String
+  size          Int
+  url           String
+  alt           String?
+  createdAt     DateTime  @default(now())
+  uploadedById  String
+  uploadedBy    User      @relation(fields: [uploadedById], references: [id])
+}
+
+model Gallery {
+  id            String    @id @default(cuid())
+  title         String
+  titleEn       String?
+  description   String?
+  descriptionEn String?
+  images        String    // JSON string array
+  category      String?
+  isPublished   Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Contact {
+  id            String    @id @default(cuid())
+  name          String
+  email         String
+  phone         String?
+  subject       String?
+  message       String
+  isRead        Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+}
+
+model Setting {
+  id            String    @id @default(cuid())
+  key           String    @unique
+  value         String
+  valueEn       String?
+  type          String    @default("text")
+  updatedAt     DateTime  @updatedAt
+}
+
+model Slider {
+  id            String    @id @default(cuid())
+  title         String
+  titleEn       String?
+  subtitle      String?
+  subtitleEn    String?
+  image         String
+  buttonText    String?
+  buttonTextEn  String?
+  buttonUrl     String?
+  order         Int       @default(0)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model HomeSection {
+  id            String    @id @default(cuid())
+  type          String    // 'motto', 'video-profile', 'admission', 'feature'
+  title         String?
+  titleEn       String?
+  subtitle      String?
+  subtitleEn    String?
+  content       String?   // HTML content or description
+  contentEn     String?
+  image         String?
+  images        String?   // JSON string array for multiple images
+  videoUrl      String?
+  buttonText    String?
+  buttonTextEn  String?
+  buttonUrl     String?
+  order         Int       @default(0)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model FAQ {
+  id            String    @id @default(cuid())
+  question      String
+  questionEn    String?
+  answer        String    // HTML content
+  answerEn      String?
+  image         String?   // Image for right side of FAQ section
+  sectionTitle  String?   // Motto/quote above FAQ section
+  sectionTitleEn String?
+  order         Int       @default(0)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Figure {
+  id            String    @id @default(cuid())
+  name          String
+  nameEn        String?
+  position      String    // Role/position (e.g., "ADVISORY BOARD AL AZHAR IIBS")
+  positionEn    String?
+  image         String    // Photo of the figure
+  order         Int       @default(0)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Partnership {
+  id            String    @id @default(cuid())
+  name          String
+  nameEn        String?
+  logo          String    // Logo URL
+  category      String    // 'international', 'health', 'student-escort'
+  order         Int       @default(0)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model PageBlock {
+  id            String    @id @default(cuid())
+  pageId        String
+  page          Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  type          String    // 'hero-slider', 'home-section', 'faq-section', 'figures-section', 'partnership-section', 'split-screen', 'gallery-carousel', 'video-section', 'text', 'image', 'two-column', 'accordion', 'cards', 'testimonial'
+  order         Int       @default(0)
+  data          String    // JSON string for block data
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Category {
+  id            String    @id @default(cuid())
+  name          String
+  nameEn        String?
+  slug          String    @unique
+  description   String?
+  descriptionEn String?
+  image         String?
+  parentId      String?
+  parent        Category? @relation("CategoryChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children      Category[] @relation("CategoryChildren")
+  categoryType  String    @default("general") // 'program', 'facility', 'academic', 'general'
+  order         Int       @default(0)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  posts         Post[]
+}

@@ -1,0 +1,64 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import HomePage from './routes/HomePage'
+import DynamicPage from './routes/DynamicPage'
+import PostPage from './routes/PostPage'
+import ContactPage from './routes/ContactPage'
+import LoginPage from './routes/LoginPage'
+import DashboardPage from './routes/admin/DashboardPage'
+import SlidersPage from './routes/admin/SlidersPage'
+import SliderNewPage from './routes/admin/SliderNewPage'
+import SliderEditPage from './routes/admin/SliderEditPage'
+import HomeSectionsPage from './routes/admin/HomeSectionsPage'
+import FAQsPage from './routes/admin/FAQsPage'
+import FiguresPage from './routes/admin/FiguresPage'
+import PartnershipsPage from './routes/admin/PartnershipsPage'
+import PagesPage from './routes/admin/PagesPage'
+import PostsPage from './routes/admin/PostsPage'
+import MenusPage from './routes/admin/MenusPage'
+import CategoriesPage from './routes/admin/CategoriesPage'
+import SettingsPage from './routes/admin/SettingsPage'
+import PlaceholderPage from './routes/admin/PlaceholderPage'
+import NotFound from './routes/NotFound'
+import './index.css'
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/berita/:slug" element={<PostPage />} />
+        <Route path="/kontak" element={<ContactPage />} />
+        <Route path="/:slug" element={<DynamicPage />} />
+        
+        {/* Auth Routes */}
+        <Route path="/login" element={<LoginPage />} />
+        
+        {/* Admin Routes */}
+        <Route path="/admin" element={<DashboardPage />} />
+        <Route path="/admin/sliders" element={<SlidersPage />} />
+        <Route path="/admin/sliders/new" element={<SliderNewPage />} />
+        <Route path="/admin/sliders/:id" element={<SliderEditPage />} />
+        <Route path="/admin/home-sections" element={<HomeSectionsPage />} />
+        <Route path="/admin/faqs" element={<FAQsPage />} />
+        <Route path="/admin/figures" element={<FiguresPage />} />
+        <Route path="/admin/partnerships" element={<PartnershipsPage />} />
+        <Route path="/admin/pages" element={<PagesPage />} />
+        <Route path="/admin/posts" element={<PostsPage />} />
+        <Route path="/admin/menus" element={<MenusPage />} />
+        <Route path="/admin/categories" element={<CategoriesPage />} />
+        <Route path="/admin/settings" element={<SettingsPage />} />
+        <Route path="/admin/split-screens" element={<PlaceholderPage title="Split Screen Section" />} />
+        <Route path="/admin/masjid-al-fatih" element={<PlaceholderPage title="Masjid AL FATIH" />} />
+        <Route path="/admin/university-maps" element={<PlaceholderPage title="University Map" />} />
+        <Route path="/admin/global-stages" element={<PlaceholderPage title="Global Stage" />} />
+        <Route path="/admin/media" element={<PlaceholderPage title="Media Library" />} />
+        
+        {/* 404 */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
+
+export default App
