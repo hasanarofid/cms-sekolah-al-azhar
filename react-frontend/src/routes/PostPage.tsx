@@ -4,6 +4,8 @@ import { Navigation } from '../components/Navigation'
 import { Footer } from '../components/Footer'
 import { WhatsAppButton } from '../components/WhatsAppButton'
 import { apiClient } from '../lib/api-client'
+import { useSettings } from '../lib/use-settings'
+import { getImageUrl } from '../lib/utils-image-url'
 import { Search, ChevronRight } from 'lucide-react'
 
 export default function PostPage() {
@@ -19,6 +21,9 @@ export default function PostPage() {
   const [latestPosts, setLatestPosts] = useState<any[]>([])
   const [nextPost, setNextPost] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+
+  // Apply settings (favicon, title) ke document
+  useSettings(settings)
 
   useEffect(() => {
     async function loadData() {
@@ -77,7 +82,7 @@ export default function PostPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white">
       <Navigation 
         menus={menus} 
         locale={locale}
@@ -86,33 +91,36 @@ export default function PostPage() {
         showWebsiteName={settings.show_website_name?.value === 'true'}
       />
 
+      <div className="bg-primary-600 text-white py-24 md:py-32 lg:py-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold">
+            {locale === 'en' && post.titleEn ? post.titleEn : post.title}
+          </h1>
+          <div className="flex items-center justify-center space-x-4 text-gray-200 text-sm md:text-base mt-6">
+            <span>{post.publishedAt && new Date(post.publishedAt).toLocaleDateString('id-ID', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}</span>
+            <span>•</span>
+            <span>{post.category || 'alazhar'}</span>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <article className="lg:col-span-2">
             {post.featuredImage && (
               <div className="mb-8">
                 <img
-                  src={post.featuredImage}
+                  src={getImageUrl(post.featuredImage)}
                   alt={post.title}
                   className="w-full h-auto object-cover rounded-lg"
                 />
               </div>
             )}
 
-            <header className="mb-8">
-              <h1 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
-                {locale === 'en' && post.titleEn ? post.titleEn : post.title}
-              </h1>
-              <div className="flex items-center space-x-4 text-gray-600 text-sm">
-                <span>{post.publishedAt && new Date(post.publishedAt).toLocaleDateString('id-ID', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}</span>
-                <span>•</span>
-                <span>{post.category || 'alazhar'}</span>
-              </div>
-            </header>
 
             <div
               className="prose prose-lg max-w-none mb-8"

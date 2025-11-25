@@ -13,6 +13,8 @@ import FAQsPage from './routes/admin/FAQsPage'
 import FiguresPage from './routes/admin/FiguresPage'
 import PartnershipsPage from './routes/admin/PartnershipsPage'
 import PagesPage from './routes/admin/PagesPage'
+import PageEditPage from './routes/admin/PageEditPage'
+import PageNewPage from './routes/admin/PageNewPage'
 import PostsPage from './routes/admin/PostsPage'
 import MenusPage from './routes/admin/MenusPage'
 import CategoriesPage from './routes/admin/CategoriesPage'
@@ -44,6 +46,8 @@ function App() {
         <Route path="/admin/figures" element={<FiguresPage />} />
         <Route path="/admin/partnerships" element={<PartnershipsPage />} />
         <Route path="/admin/pages" element={<PagesPage />} />
+        <Route path="/admin/pages/new" element={<PageNewPage />} />
+        <Route path="/admin/pages/:id" element={<PageEditPage />} />
         <Route path="/admin/posts" element={<PostsPage />} />
         <Route path="/admin/menus" element={<MenusPage />} />
         <Route path="/admin/categories" element={<CategoriesPage />} />

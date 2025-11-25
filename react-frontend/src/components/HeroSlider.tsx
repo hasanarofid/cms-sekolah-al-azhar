@@ -120,47 +120,9 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             <div className="max-w-5xl text-white text-center mx-auto">
-               {/* First Line - Top Subtitle Part 1 (like "Qur'anic Learning, Courtesy Oriented and") */}
-               {currentSlider.subtitle && (() => {
-                 const subtitle = locale === 'en' && currentSlider.subtitleEn
-                   ? currentSlider.subtitleEn
-                   : currentSlider.subtitle
-                 const parts = subtitle?.split(' and ') || []
-                 if (parts.length > 1) {
-                   return (
-                     <p 
-                       className="text-lg md:text-xl lg:text-2xl mb-1 text-white font-normal animate-slide-in"
-                       style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.9)' }}
-                     >
-                       {parts[0]}
-                     </p>
-                   )
-                 }
-                 return null
-               })()}
-               
-               {/* Second Line - Top Subtitle Part 2 (like "World Class Education") */}
-               {currentSlider.subtitle && (() => {
-                 const subtitle = locale === 'en' && currentSlider.subtitleEn
-                   ? currentSlider.subtitleEn
-                   : currentSlider.subtitle
-                 const parts = subtitle?.split(' and ') || []
-                 if (parts.length > 1) {
-                   return (
-                     <p 
-                       className="text-lg md:text-xl lg:text-2xl mb-6 text-white font-normal animate-slide-in"
-                       style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.9)' }}
-                     >
-                       {parts[1]}
-                     </p>
-                   )
-                 }
-                 return null
-               })()}
-               
                {/* Main Title - Split into two lines (like "Al Azhar International" and "Islamic Boarding School") */}
                <h1 
-                 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-8 text-white animate-slide-in animate-delay-1 leading-tight"
+                 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 text-white animate-slide-in leading-tight"
                  style={{ textShadow: '3px 3px 12px rgba(0,0,0,0.9)', letterSpacing: '0.5px' }}
                >
                  {(() => {
@@ -191,14 +153,56 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
                  })()}
                </h1>
                
-               {/* Button - Yellow button like reference */}
+               {/* Subtitle - Split by " and " if exists, otherwise show full subtitle */}
+               {currentSlider.subtitle && (() => {
+                 const subtitle = locale === 'en' && currentSlider.subtitleEn
+                   ? currentSlider.subtitleEn
+                   : currentSlider.subtitle
+                 
+                 if (!subtitle) return null
+                 
+                 const parts = subtitle.split(' and ')
+                 
+                 if (parts.length > 1) {
+                   // Split into two lines if contains " and "
+                   return (
+                     <>
+                       <p 
+                         className="text-lg md:text-xl lg:text-2xl mb-1 text-white font-normal animate-slide-in animate-delay-1"
+                         style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.9)' }}
+                       >
+                         {parts[0]}
+                       </p>
+                       <p 
+                         className="text-lg md:text-xl lg:text-2xl mb-8 text-white font-normal animate-slide-in animate-delay-1"
+                         style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.9)' }}
+                       >
+                         {parts[1]}
+                       </p>
+                     </>
+                   )
+                 } else {
+                   // Show full subtitle in one line if no " and "
+                   return (
+                     <p 
+                       className="text-lg md:text-xl lg:text-2xl mb-8 text-white font-normal animate-slide-in animate-delay-1"
+                       style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.9)' }}
+                     >
+                       {subtitle}
+                     </p>
+                   )
+                 }
+               })()}
+               
+               {/* Button - Green button matching school logo */}
                {currentSlider.buttonText && currentSlider.buttonUrl && (
                  <div className="animate-slide-in animate-delay-2 mt-4">
                      <a
                        href={currentSlider.buttonUrl}
                        target={isExternalUrl(currentSlider.buttonUrl) ? '_blank' : '_self'}
                        rel={isExternalUrl(currentSlider.buttonUrl) ? 'noopener noreferrer' : undefined}
-                       className="inline-block bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-10 py-4 rounded-lg font-bold text-lg md:text-xl shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-105"
+                       className="inline-block bg-primary-500 hover:bg-primary-600 text-white px-10 py-4 rounded-lg font-bold text-lg md:text-xl shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-105"
+                       style={{ boxShadow: '0 10px 25px rgba(34, 197, 94, 0.3)' }}
                      >
                        {locale === 'en' && currentSlider.buttonTextEn
                          ? currentSlider.buttonTextEn
@@ -230,7 +234,7 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
            </>
          )}
 
-         {/* Dots Indicator - Active dot is yellow like button */}
+         {/* Dots Indicator - Active dot is green like button */}
          {activeSliders.length > 1 && (
            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
              {activeSliders.map((_, index) => (
@@ -239,7 +243,7 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
                  onClick={() => goToSlide(index)}
                  className={`h-2 rounded-full transition-all duration-300 ${
                    index === currentIndex
-                     ? 'w-10 bg-yellow-400' // Active dot - yellow and longer (matches button)
+                     ? 'w-10 bg-primary-500' // Active dot - green and longer (matches button)
                      : 'w-2 bg-white/60 hover:bg-white/80' // Inactive dots - semi-transparent white
                  }`}
                  aria-label={`Go to slide ${index + 1}`}

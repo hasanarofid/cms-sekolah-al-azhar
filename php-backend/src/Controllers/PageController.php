@@ -71,6 +71,19 @@ class PageController extends BaseController
             Response::error('Page not found', 404);
         }
 
+        // Load blocks for this page
+        $blocks = $this->db->fetchAll(
+            'SELECT * FROM PageBlock WHERE pageId = ? ORDER BY `order` ASC',
+            [$id]
+        );
+        
+        // Parse JSON data for each block
+        foreach ($blocks as &$block) {
+            $block['data'] = json_decode($block['data'] ?? '{}', true);
+        }
+        
+        $page['blocks'] = $blocks;
+
         Response::json($page);
     }
 

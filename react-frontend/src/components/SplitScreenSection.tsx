@@ -34,15 +34,15 @@ export function SplitScreenSection({ sections, locale = 'id' }: SplitScreenSecti
           {/* Full width grid - no container padding */}
           <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px] lg:min-h-[600px]">
             {/* Left: Yellow Background with Text - Full width */}
-            <div className="bg-yellow-400 flex items-center justify-center p-8 lg:p-12 xl:p-16">
+            <div className="bg-primary-600 flex items-center justify-center p-8 lg:p-12 xl:p-16">
               <div className="max-w-xl space-y-6">
                 {section.title && (
-                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight font-sans">
+                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight font-sans">
                     {locale === 'en' && section.titleEn ? section.titleEn : section.title}
                   </h2>
                 )}
                 {(section.content || section.subtitle) && (
-                  <p className="text-gray-900 text-base md:text-lg leading-relaxed font-sans">
+                  <p className="text-white text-base md:text-lg leading-relaxed font-sans">
                     {locale === 'en' && section.contentEn 
                       ? section.contentEn 
                       : section.content || section.subtitle}

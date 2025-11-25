@@ -10,6 +10,7 @@ import { FiguresSection } from '../components/FiguresSection'
 import { PartnershipsSection } from '../components/PartnershipsSection'
 import { getImageUrl } from '../lib/utils-image-url'
 import { apiClient } from '../lib/api-client'
+import { useSettings } from '../lib/use-settings'
 import { ArrowRight } from 'lucide-react'
 
 export default function HomePage() {
@@ -25,6 +26,9 @@ export default function HomePage() {
   const [partnerships, setPartnerships] = useState<any[]>([])
   const [settings, setSettings] = useState<any>({})
   const [loading, setLoading] = useState(true)
+
+  // Apply settings (favicon, title) ke document
+  useSettings(settings)
 
   useEffect(() => {
     async function loadData() {

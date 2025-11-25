@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
+import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { Navigation } from '../components/Navigation'
 import { Footer } from '../components/Footer'
 import { WhatsAppButton } from '../components/WhatsAppButton'
 import { BlockRenderer } from '../components/BlockRenderer'
 import { apiClient } from '../lib/api-client'
 import { getImageUrl } from '../lib/utils-image-url'
+import { useSettings } from '../lib/use-settings'
 
 export default function DynamicPage() {
   const params = useParams()
@@ -19,6 +20,9 @@ export default function DynamicPage() {
   const [menus, setMenus] = useState<any[]>([])
   const [settings, setSettings] = useState<any>({})
   const [loading, setLoading] = useState(true)
+
+  // Apply settings (favicon, title) ke document
+  useSettings(settings)
 
   useEffect(() => {
     async function loadData() {
@@ -88,7 +92,7 @@ export default function DynamicPage() {
           showWebsiteName={settings.show_website_name?.value === 'true'}
         />
         
-        <div className="bg-[#1e3a5f] text-white py-24 md:py-32 lg:py-40 mt-20">
+        <div className="bg-primary-600 text-white py-24 md:py-32 lg:py-40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold">
               {locale === 'en' && category.nameEn ? category.nameEn : category.name}
@@ -105,9 +109,9 @@ export default function DynamicPage() {
           {category.posts && category.posts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {category.posts.map((post: any) => (
-                <a
+                <Link
                   key={post.id}
-                  href={`/berita/${post.slug}`}
+                  to={`/berita/${post.slug}`}
                   className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 group"
                 >
                   {post.featuredImage && (
@@ -143,7 +147,7 @@ export default function DynamicPage() {
                       Selengkapnya →
                     </span>
                   </div>
-                </a>
+                </Link>
               ))}
             </div>
           ) : (
@@ -181,9 +185,12 @@ export default function DynamicPage() {
 
   const needsSpecialHeader = page.slug === 'tentang-kami' || page.template === 'with-header'
   const isAcademicTemplate = page.template === 'academic-smp' || page.template === 'academic-sma'
+  
+  // Check if first block is hero-slider (will be rendered separately)
   const hasHeroSlider = page.blocks && page.blocks.length > 0 && page.blocks[0].type === 'hero-slider'
   const heroSliderBlock = hasHeroSlider ? page.blocks[0] : null
-  const otherBlocks = hasHeroSlider ? page.blocks.slice(1) : page.blocks
+  // All blocks will be rendered by BlockRenderer, but hero-slider is rendered separately if it's the first block
+  const allBlocks = page.blocks || []
 
   return (
     <div className="min-h-screen bg-white">
@@ -199,7 +206,7 @@ export default function DynamicPage() {
           <BlockRenderer blocks={[heroSliderBlock]} locale={locale} />
         </div>
       ) : needsSpecialHeader ? (
-        <div className="relative bg-[#1e3a5f] text-white">
+        <div className="relative bg-primary-600 text-white">
           <Navigation 
             menus={menus} 
             locale={locale}
@@ -208,8 +215,8 @@ export default function DynamicPage() {
             showWebsiteName={settings.show_website_name?.value === 'true'}
           />
           <div className="py-24 md:py-32 lg:py-40 pt-32 md:pt-40 lg:pt-48">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-center">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold">
                 {locale === 'en' && page.titleEn ? page.titleEn : page.title}
               </h1>
             </div>
@@ -240,30 +247,38 @@ export default function DynamicPage() {
         </div>
       )}
 
-      {otherBlocks && otherBlocks.length > 0 ? (
-        <BlockRenderer blocks={otherBlocks} locale={locale} />
-      ) : !hasHeroSlider && (
-        <article className={`${needsSpecialHeader || isAcademicTemplate ? 'bg-white' : 'max-w-4xl mx-auto'} px-4 sm:px-6 lg:px-8 ${needsSpecialHeader || isAcademicTemplate ? 'py-12 md:py-16' : 'py-12'}`}>
-          {!needsSpecialHeader && !isAcademicTemplate && (
-            <header className="mb-8">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
-                {locale === 'en' && page.titleEn ? page.titleEn : page.title}
-              </h1>
-              {page.excerpt && (
-                <p className="text-xl text-gray-600">
-                  {locale === 'en' && page.excerptEn ? page.excerptEn : page.excerpt}
-                </p>
-              )}
-            </header>
-          )}
+      {/* Render all blocks if available, otherwise render page content */}
+      {allBlocks && allBlocks.length > 0 ? (
+        <div className="bg-white">
+          <BlockRenderer blocks={allBlocks} locale={locale} />
+        </div>
+      ) : (
+        // Only show content if there are no blocks or if hero-slider is not present
+        <div className="bg-white">
+          <article className={`${needsSpecialHeader || isAcademicTemplate ? 'bg-white' : 'max-w-4xl mx-auto'} px-4 sm:px-6 lg:px-8 ${needsSpecialHeader || isAcademicTemplate ? 'py-12 md:py-16' : 'py-12'}`}>
+            {!needsSpecialHeader && !isAcademicTemplate && (
+              <header className="mb-8">
+                <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
+                  {locale === 'en' && page.titleEn ? page.titleEn : page.title}
+                </h1>
+                {page.excerpt && (
+                  <p className="text-xl text-gray-600">
+                    {locale === 'en' && page.excerptEn ? page.excerptEn : page.excerpt}
+                  </p>
+                )}
+              </header>
+            )}
 
-          <div
-            className={`${needsSpecialHeader ? 'max-w-5xl mx-auto' : ''} prose prose-lg max-w-none`}
-            dangerouslySetInnerHTML={{
-              __html: locale === 'en' && page.contentEn ? page.contentEn : page.content
-            }}
-          />
-        </article>
+            {(page.content || page.contentEn) && (
+              <div
+                className={`${needsSpecialHeader ? 'max-w-5xl mx-auto' : ''} prose prose-lg max-w-none`}
+                dangerouslySetInnerHTML={{
+                  __html: locale === 'en' && page.contentEn ? page.contentEn : page.content
+                }}
+              />
+            )}
+          </article>
+        </div>
       )}
 
       <Footer 

@@ -114,14 +114,14 @@ export function BlockRenderer({ blocks, locale = 'id' }: BlockRendererProps) {
               return (
                 <div
                   key={block.id}
-                  className="prose prose-lg max-w-none"
+                  className="prose prose-lg max-w-none px-4 sm:px-6 lg:px-8 py-8"
                   dangerouslySetInnerHTML={{ __html: blockData.content || '' }}
                 />
               )
 
             case 'image':
               return (
-                <div key={block.id} className="my-8">
+                <div key={block.id} className="my-8 px-4 sm:px-6 lg:px-8">
                   {blockData.image && (
                     <img
                       src={getImageUrl(blockData.image)}
@@ -134,29 +134,32 @@ export function BlockRenderer({ blocks, locale = 'id' }: BlockRendererProps) {
 
             case 'two-column':
               return (
-                <TwoColumnBlock
-                  key={block.id}
-                  data={blockData}
-                  locale={locale}
-                />
+                <div key={block.id} className="px-4 sm:px-6 lg:px-8">
+                  <TwoColumnBlock
+                    data={blockData}
+                    locale={locale}
+                  />
+                </div>
               )
 
             case 'accordion':
               return (
-                <AccordionBlock
-                  key={block.id}
-                  data={blockData}
-                  locale={locale}
-                />
+                <div key={block.id} className="px-4 sm:px-6 lg:px-8">
+                  <AccordionBlock
+                    data={blockData}
+                    locale={locale}
+                  />
+                </div>
               )
 
             case 'cards':
               return (
-                <CardsBlock
-                  key={block.id}
-                  data={blockData}
-                  locale={locale}
-                />
+                <div key={block.id} className="px-4 sm:px-6 lg:px-8">
+                  <CardsBlock
+                    data={blockData}
+                    locale={locale}
+                  />
+                </div>
               )
 
             default:
@@ -445,8 +448,17 @@ function CardsBlock({ data, locale }: { data: any; locale?: 'id' | 'en' }) {
   const cards = data.cards || []
   const columns = data.columns || 3
 
+  // Map columns to Tailwind classes (dynamic classes don't work with Tailwind JIT)
+  const gridColsMap: Record<number, string> = {
+    1: 'md:grid-cols-1',
+    2: 'md:grid-cols-2',
+    3: 'md:grid-cols-3',
+    4: 'md:grid-cols-4',
+  }
+  const gridColsClass = gridColsMap[columns as keyof typeof gridColsMap] || 'md:grid-cols-3'
+
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-${columns} gap-8 my-8`}>
+    <div className={`grid grid-cols-1 ${gridColsClass} gap-8 my-8`}>
       {cards.map((card: any, index: number) => {
         const title = locale === 'en' && card.titleEn ? card.titleEn : card.title
         const content = locale === 'en' && card.contentEn ? card.contentEn : card.content

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { AdminLayout } from '../../components/admin/AdminLayout'
+import { SettingsForm } from '../../components/admin/SettingsForm'
 import { apiClient } from '../../lib/api-client'
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
+  const [settings, setSettings] = useState<Record<string, any>>({})
 
   useEffect(() => {
     loadSettings()
@@ -11,7 +13,15 @@ export default function SettingsPage() {
 
   async function loadSettings() {
     try {
-      await apiClient.get('/admin/settings')
+      const data = await apiClient.get('/admin/settings', false) // false = tidak perlu auth untuk settings
+      // Convert array to object dengan key sebagai index
+      const settingsObj: Record<string, any> = {}
+      if (Array.isArray(data)) {
+        data.forEach((setting: any) => {
+          settingsObj[setting.key] = setting
+        })
+      }
+      setSettings(settingsObj)
     } catch (error) {
       console.error('Error loading settings:', error)
     } finally {
@@ -34,13 +44,7 @@ export default function SettingsPage() {
       <div className="w-full">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-6">Pengaturan</h1>
-
-
-          <div className="bg-white rounded-lg shadow p-6 space-y-6">
-            <p className="text-gray-600">
-              Halaman pengaturan lengkap akan segera tersedia. Untuk saat ini, gunakan Next.js admin panel untuk mengelola pengaturan.
-            </p>
-          </div>
+          <SettingsForm settings={settings} />
         </div>
       </div>
     </AdminLayout>

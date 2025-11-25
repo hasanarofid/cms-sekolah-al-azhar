@@ -194,7 +194,7 @@ export function HomeSections({ sections, locale = 'id' }: HomeSectionsProps) {
                           href={section.buttonUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-block bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-8 py-3.5 md:px-10 md:py-4 rounded-lg font-bold text-base md:text-lg shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-105"
+                          className="inline-block bg-primary-500 hover:bg-primary-600 text-white px-8 py-3.5 md:px-10 md:py-4 rounded-lg font-bold text-base md:text-lg shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-105"
                         >
                           {locale === 'en' && section.buttonTextEn
                             ? section.buttonTextEn
@@ -203,7 +203,7 @@ export function HomeSections({ sections, locale = 'id' }: HomeSectionsProps) {
                       ) : (
                         <Link
                           to={section.buttonUrl}
-                          className="inline-block bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-8 py-3.5 md:px-10 md:py-4 rounded-lg font-bold text-base md:text-lg shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-105"
+                          className="inline-block bg-primary-500 hover:bg-primary-600 text-white px-8 py-3.5 md:px-10 md:py-4 rounded-lg font-bold text-base md:text-lg shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-105"
                         >
                           {locale === 'en' && section.buttonTextEn
                             ? section.buttonTextEn

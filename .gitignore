@@ -38,3 +38,7 @@ php-backend/public/uploads/*
 *.tmp
 *.temp
 
+# CMS Sekolah folder (old project)
+cmssekolah/
+../cmssekolah/
+

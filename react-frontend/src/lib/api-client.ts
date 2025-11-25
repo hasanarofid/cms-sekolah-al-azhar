@@ -96,7 +96,12 @@ export const apiClient = {
       throw new Error(error.error || 'Request failed');
     }
 
-    return response.json();
+    // DELETE might return empty response
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return response.json();
+    }
+    return { success: true };
   },
 
   async upload(endpoint: string, file: File, type: string = 'general', includeAuth = true) {

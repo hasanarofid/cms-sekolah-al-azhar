@@ -170,8 +170,10 @@ $routes = [
     'api/admin/pages/([a-zA-Z0-9]+)/delete' => 'PageController@delete',
     'api/admin/pages/([a-zA-Z0-9]+)/blocks' => 'PageBlockController@index',
     'api/admin/pages/([a-zA-Z0-9]+)/blocks/create' => 'PageBlockController@create',
+    // More flexible route for block IDs (must come before specific route)
+    'api/admin/pages/([^/]+)/blocks/([^/]+)' => 'PageBlockController@show', // GET untuk show, PUT untuk update, DELETE untuk delete - flexible ID matching
     
-    // Admin - Page Blocks
+    // Admin - Page Blocks (alternative route)
     'api/admin/page-blocks' => 'PageBlockController@all',
     'api/admin/page-blocks/([a-zA-Z0-9]+)' => 'PageBlockController@show',
     'api/admin/page-blocks/([a-zA-Z0-9]+)/update' => 'PageBlockController@update',
@@ -276,6 +278,27 @@ foreach ($routes as $pattern => $handler) {
                 $method = 'update';
             } elseif ($httpMethod === 'DELETE' && method_exists($controller, 'delete')) {
                 $method = 'delete';
+            }
+        }
+        
+        // Special handling untuk PageBlockController dengan 2 parameters (pageId, blockId)
+        if ($controllerName === 'PageBlockController' && count($matches) === 2 && $method === 'show') {
+            $httpMethod = strtoupper($_SERVER['REQUEST_METHOD']);
+            if ($httpMethod === 'POST' && isset($_POST['_method'])) {
+                $httpMethod = strtoupper($_POST['_method']);
+            }
+            
+            if ($httpMethod === 'PUT' && method_exists($controller, 'update')) {
+                $method = 'update';
+                // Pass only blockId untuk update/delete
+                $matches = [$matches[1]]; // blockId is second parameter (index 1)
+            } elseif ($httpMethod === 'DELETE' && method_exists($controller, 'delete')) {
+                $method = 'delete';
+                // Pass only blockId untuk delete
+                $matches = [$matches[1]]; // blockId is second parameter (index 1)
+            } elseif ($httpMethod === 'GET') {
+                // For GET, show method only needs blockId
+                $matches = [$matches[1]]; // blockId is second parameter (index 1)
             }
         }
         

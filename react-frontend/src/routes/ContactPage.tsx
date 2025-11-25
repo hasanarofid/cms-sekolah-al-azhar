@@ -5,6 +5,7 @@ import { Footer } from '../components/Footer'
 import { WhatsAppButton } from '../components/WhatsAppButton'
 import { ContactForm } from '../components/ContactForm'
 import { apiClient } from '../lib/api-client'
+import { useSettings } from '../lib/use-settings'
 
 export default function ContactPage() {
   const [searchParams] = useSearchParams()
@@ -13,6 +14,9 @@ export default function ContactPage() {
   const [menus, setMenus] = useState<any[]>([])
   const [settings, setSettings] = useState<any>({})
   const [loading, setLoading] = useState(true)
+
+  // Apply settings (favicon, title) ke document
+  useSettings(settings)
 
   useEffect(() => {
     async function loadData() {
@@ -70,7 +74,7 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white">
       <Navigation 
         menus={menus} 
         locale={locale}
@@ -79,9 +83,11 @@ export default function ContactPage() {
         showWebsiteName={settings.show_website_name?.value === 'true'}
       />
 
-      <div className="bg-primary-600 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold">Kontak</h1>
+      <div className="bg-primary-600 text-white py-24 md:py-32 lg:py-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold">
+            {locale === 'en' ? 'Contact' : 'Kontak'}
+          </h1>
         </div>
       </div>
 

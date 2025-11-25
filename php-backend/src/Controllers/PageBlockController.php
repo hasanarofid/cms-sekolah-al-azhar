@@ -48,6 +48,9 @@ class PageBlockController extends BaseController
             }
 
             Response::json($blocks);
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Support POST directly to /blocks for RESTful API
+            $this->create($pageId);
         }
     }
 
@@ -118,13 +121,25 @@ class PageBlockController extends BaseController
     {
         $this->requireAuth();
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'PUT' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+        $httpMethod = strtoupper($_SERVER['REQUEST_METHOD']);
+        if ($httpMethod !== 'PUT' && $httpMethod !== 'POST') {
             Response::error('Method not allowed', 405);
         }
 
+        if (!$id || trim($id) === '') {
+            Response::error('Block ID is required', 400);
+        }
+
+        // Trim and validate ID
+        $id = trim($id);
+        error_log("PageBlockController::update - Looking for block ID: " . $id . " (length: " . strlen($id) . ")");
+
         $existing = $this->db->fetchOne('SELECT * FROM PageBlock WHERE id = ?', [$id]);
         if (!$existing) {
-            Response::error('Block not found', 404);
+            // Log untuk debugging - check if similar IDs exist
+            $similar = $this->db->fetchAll('SELECT id FROM PageBlock WHERE id LIKE ? LIMIT 5', [$id . '%']);
+            error_log("PageBlockController::update - Block not found. ID: " . $id . " (length: " . strlen($id) . "). Similar IDs: " . json_encode($similar));
+            Response::error('Block not found. ID: ' . $id, 404);
         }
 
         $data = $this->getJsonInput();
@@ -152,8 +167,13 @@ class PageBlockController extends BaseController
     {
         $this->requireAuth();
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+        $httpMethod = strtoupper($_SERVER['REQUEST_METHOD']);
+        if ($httpMethod !== 'DELETE' && $httpMethod !== 'POST') {
             Response::error('Method not allowed', 405);
+        }
+
+        if (!$id) {
+            Response::error('Block ID is required', 400);
         }
 
         $existing = $this->db->fetchOne('SELECT * FROM PageBlock WHERE id = ?', [$id]);
@@ -162,7 +182,7 @@ class PageBlockController extends BaseController
         }
 
         $this->db->query('DELETE FROM PageBlock WHERE id = ?', [$id]);
-        Response::json(['success' => true]);
+        Response::json(['success' => true, 'message' => 'Block deleted successfully']);
     }
 }
 
