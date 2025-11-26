@@ -147,6 +147,7 @@ model Slider {
   subtitle      String?
   subtitleEn    String?
   image         String
+  videoUrl      String?
   buttonText    String?
   buttonTextEn  String?
   buttonUrl     String?

@@ -49,6 +49,10 @@
   animation-delay: 0.4s;
 }
 
+.animate-delay-3 {
+  animation-delay: 0.6s;
+}
+
 /* Custom styles for page content */
 .prose iframe {
   width: 100%;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Edit } from 'lucide-react'
+import { Plus, Edit, PlayCircle } from 'lucide-react'
 import { AdminLayout } from '../../components/admin/AdminLayout'
 import { apiClient } from '../../lib/api-client'
 import { DeleteButton } from '../../components/admin/DeleteButton'
@@ -92,6 +92,9 @@ export default function SlidersPage() {
                       Subtitle
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Video
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Order
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -141,6 +144,21 @@ export default function SlidersPage() {
                         <div className="text-sm text-gray-500 max-w-xs truncate">
                           {slider.subtitle || '-'}
                         </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {slider.videoUrl ? (
+                          <a
+                            href={slider.videoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-primary-600 hover:text-primary-800 space-x-1 text-sm"
+                          >
+                            <PlayCircle size={16} />
+                            <span>YouTube</span>
+                          </a>
+                        ) : (
+                          <span className="text-sm text-gray-400">-</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">{slider.order}</div>

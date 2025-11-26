@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { ChevronLeft, ChevronRight, Play, X } from 'lucide-react'
 import { getImageUrl } from '../lib/utils-image-url'
 
 interface Slider {
@@ -11,6 +11,7 @@ interface Slider {
   subtitle?: string | null
   subtitleEn?: string | null
   image: string
+  videoUrl?: string | null
   buttonText?: string | null
   buttonTextEn?: string | null
   buttonUrl?: string | null
@@ -25,8 +26,36 @@ interface HeroSliderProps {
 export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+  const [activeVideo, setActiveVideo] = useState<{ sliderId: string; videoId: string } | null>(null)
+  const autoPlayResumeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const activeSliders = sliders.filter(s => s.isActive !== false)
+
+  const clearAutoPlayTimeout = () => {
+    if (autoPlayResumeTimeout.current) {
+      clearTimeout(autoPlayResumeTimeout.current)
+      autoPlayResumeTimeout.current = null
+    }
+  }
+
+  const pauseAutoPlay = () => {
+    setIsAutoPlaying(false)
+    clearAutoPlayTimeout()
+  }
+
+  const resumeAutoPlayLater = () => {
+    clearAutoPlayTimeout()
+    autoPlayResumeTimeout.current = setTimeout(() => {
+      setIsAutoPlaying(true)
+      autoPlayResumeTimeout.current = null
+    }, 10000)
+  }
+
+  useEffect(() => {
+    return () => {
+      clearAutoPlayTimeout()
+    }
+  }, [])
 
   useEffect(() => {
     if (!isAutoPlaying || activeSliders.length <= 1) return
@@ -50,21 +79,23 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
 
   const goToSlide = (index: number) => {
     setCurrentIndex(index)
-    setIsAutoPlaying(false)
-    // Resume auto-play after 10 seconds of manual interaction
-    setTimeout(() => setIsAutoPlaying(true), 10000) 
+    setActiveVideo(null)
+    pauseAutoPlay()
+    resumeAutoPlayLater()
   }
 
   const goToPrevious = () => {
     setCurrentIndex((prev) => (prev - 1 + activeSliders.length) % activeSliders.length)
-    setIsAutoPlaying(false)
-    setTimeout(() => setIsAutoPlaying(true), 10000)
+    setActiveVideo(null)
+    pauseAutoPlay()
+    resumeAutoPlayLater()
   }
 
   const goToNext = () => {
     setCurrentIndex((prev) => (prev + 1) % activeSliders.length)
-    setIsAutoPlaying(false)
-    setTimeout(() => setIsAutoPlaying(true), 10000)
+    setActiveVideo(null)
+    pauseAutoPlay()
+    resumeAutoPlayLater()
   }
 
   // Calculate the transform value to shift the entire slide strip
@@ -74,6 +105,42 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
   // Helper to determine if the URL is external
   const isExternalUrl = (url: string | null | undefined) => 
     url && (url.startsWith('http://') || url.startsWith('https://'))
+
+  const extractYouTubeId = (url?: string | null) => {
+    if (!url) return null
+    const trimmed = url.trim()
+    const youtubeRegex = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/
+    const match = trimmed.match(youtubeRegex)
+    if (match && match[1]) {
+      return match[1]
+    }
+    try {
+      const urlObj = new URL(trimmed)
+      if (urlObj.hostname.includes('youtube.com')) {
+        const id = urlObj.searchParams.get('v')
+        return id && id.length >= 11 ? id : null
+      }
+    } catch {
+      // Invalid URL - ignore
+    }
+    return null
+  }
+
+  const handlePlayVideo = (slider: Slider) => {
+    if (!slider.videoUrl) return
+    const videoId = extractYouTubeId(slider.videoUrl)
+    pauseAutoPlay()
+    if (!videoId) {
+      window.open(slider.videoUrl, '_blank', 'noopener,noreferrer')
+      return
+    }
+    setActiveVideo({ sliderId: slider.id, videoId })
+  }
+
+  const closeVideoModal = () => {
+    setActiveVideo(null)
+    setIsAutoPlaying(true)
+  }
 
   return (
     <div className="relative w-full h-[85vh] min-h-[700px] overflow-hidden">
@@ -194,9 +261,26 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
                  }
                })()}
                
+               {/* Video Button */}
+               {currentSlider.videoUrl && (
+                 <div className="animate-slide-in animate-delay-2 mt-6 flex flex-col items-center">
+                   <button
+                     type="button"
+                     onClick={() => handlePlayVideo(currentSlider)}
+                     className="w-20 h-20 rounded-full bg-white/90 text-red-600 hover:bg-red-600 hover:text-white shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-white/50"
+                     aria-label="Putar video"
+                   >
+                     <Play size={36} fill="currentColor" strokeWidth={0} className="ml-1" />
+                   </button>
+                   <span className="mt-4 uppercase tracking-[0.5em] text-xs text-white/80">
+                     Putar Video
+                   </span>
+                 </div>
+               )}
+
                {/* Button - Green button matching school logo */}
                {currentSlider.buttonText && currentSlider.buttonUrl && (
-                 <div className="animate-slide-in animate-delay-2 mt-4">
+                <div className={`animate-slide-in ${currentSlider.videoUrl ? 'animate-delay-3' : 'animate-delay-2'} mt-8`}>
                      <a
                        href={currentSlider.buttonUrl}
                        target={isExternalUrl(currentSlider.buttonUrl) ? '_blank' : '_self'}
@@ -250,7 +334,30 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
                />
              ))}
            </div>
-         )}
+        )}
+
+        {/* Video Modal */}
+        {activeVideo && (
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+            <div className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+              <iframe
+                src={`https://www.youtube.com/embed/${activeVideo.videoId}?autoplay=1&rel=0`}
+                title="Hero Slider Video"
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              />
+              <button
+                type="button"
+                onClick={closeVideoModal}
+                className="absolute top-4 right-4 bg-black/70 text-white rounded-full p-2 hover:bg-black focus:outline-none focus:ring-2 focus:ring-white/70"
+                aria-label="Tutup video"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+        )}
        </div>
    )
  }

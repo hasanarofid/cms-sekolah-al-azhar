@@ -7,12 +7,18 @@ import { Upload, X, Loader2 } from 'lucide-react'
 import { apiClient } from '../../lib/api-client'
 import { getImageUrl } from '../../lib/utils-image-url'
 
+const youtubeUrlRegex = /(youtube\.com\/(watch\?v=|embed\/|shorts\/)|youtu\.be\/)/i
+
 const sliderSchema = z.object({
   title: z.string().min(1, 'Title wajib diisi'),
   titleEn: z.string().optional(),
   subtitle: z.string().optional(),
   subtitleEn: z.string().optional(),
   image: z.string().min(1, 'Gambar wajib diupload'),
+  videoUrl: z.string().trim().optional().refine(
+    (val) => !val || youtubeUrlRegex.test(val),
+    { message: 'Gunakan tautan YouTube yang valid' }
+  ),
   buttonText: z.string().optional(),
   buttonTextEn: z.string().optional(),
   buttonUrl: z.string().refine(
@@ -33,6 +39,7 @@ interface SliderFormProps {
     subtitle?: string | null
     subtitleEn?: string | null
     image: string
+    videoUrl?: string | null
     buttonText?: string | null
     buttonTextEn?: string | null
     buttonUrl?: string | null
@@ -64,6 +71,7 @@ export function SliderForm({ slider }: SliderFormProps) {
           subtitle: slider.subtitle || '',
           subtitleEn: slider.subtitleEn || '',
           image: slider.image,
+          videoUrl: slider.videoUrl || '',
           buttonText: slider.buttonText || '',
           buttonTextEn: slider.buttonTextEn || '',
           buttonUrl: slider.buttonUrl || '',
@@ -71,6 +79,7 @@ export function SliderForm({ slider }: SliderFormProps) {
           isActive: slider.isActive,
         }
       : {
+          videoUrl: '',
           order: 0,
           isActive: true,
         },
@@ -126,11 +135,13 @@ export function SliderForm({ slider }: SliderFormProps) {
       if (slider) {
         await apiClient.put(`/admin/sliders/${slider.id}`, {
           ...data,
+          videoUrl: data.videoUrl?.trim() || null,
           buttonUrl: data.buttonUrl || null,
         })
       } else {
         await apiClient.post('/admin/sliders/create', {
           ...data,
+          videoUrl: data.videoUrl?.trim() || null,
           buttonUrl: data.buttonUrl || null,
         })
       }
@@ -261,6 +272,24 @@ export function SliderForm({ slider }: SliderFormProps) {
         )}
         {errors.image && (
           <p className="mt-1 text-sm text-red-600">{errors.image.message}</p>
+        )}
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Video YouTube URL (opsional)
+        </label>
+        <input
+          {...register('videoUrl')}
+          type="text"
+          placeholder="https://www.youtube.com/watch?v=xxxx"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        />
+        <p className="mt-1 text-xs text-gray-500">
+          Jika diisi, hero slider akan menampilkan tombol play untuk video ini.
+        </p>
+        {errors.videoUrl && (
+          <p className="mt-1 text-sm text-red-600">{errors.videoUrl.message}</p>
         )}
       </div>
 

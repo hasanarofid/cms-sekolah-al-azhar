@@ -628,6 +628,7 @@ function BlockEditor({ pageId, block, onClose, onSave }: {
                     subtitle: '',
                     subtitleEn: '',
                     image: '',
+                    videoUrl: '',
                     buttonText: '',
                     buttonTextEn: '',
                     buttonUrl: '',
@@ -902,6 +903,27 @@ function BlockEditor({ pageId, block, onClose, onSave }: {
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                           placeholder="/pendaftaran atau https://example.com"
                         />
+                      </div>
+
+                      {/* Video URL */}
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Video YouTube URL (opsional)
+                        </label>
+                        <input
+                          type="text"
+                          value={slider.videoUrl || ''}
+                          onChange={(e) => {
+                            const newSliders = [...sliders]
+                            newSliders[index] = { ...newSliders[index], videoUrl: e.target.value }
+                            setBlockData({ ...blockData, sliders: newSliders })
+                          }}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="https://www.youtube.com/watch?v=xxxx"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Jika diisi, slider menampilkan tombol play yang membuka video.
+                        </p>
                       </div>
                     </div>
                   </div>

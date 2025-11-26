@@ -47,9 +47,9 @@ class SliderController extends BaseController
         $id = Utils::generateId();
 
         $this->db->query(
-            'INSERT INTO Slider (id, title, titleEn, subtitle, subtitleEn, image, buttonText, 
+            'INSERT INTO Slider (id, title, titleEn, subtitle, subtitleEn, image, videoUrl, buttonText, 
              buttonTextEn, buttonUrl, `order`, isActive) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $id,
                 $data['title'] ?? '',
@@ -57,6 +57,7 @@ class SliderController extends BaseController
                 $data['subtitle'] ?? null,
                 $data['subtitleEn'] ?? null,
                 $data['image'] ?? '',
+                $data['videoUrl'] ?? null,
                 $data['buttonText'] ?? null,
                 $data['buttonTextEn'] ?? null,
                 $data['buttonUrl'] ?? null,
@@ -102,6 +103,7 @@ class SliderController extends BaseController
             'subtitle' => isset($data['subtitle']) ? ($data['subtitle'] ?: null) : $existing['subtitle'],
             'subtitleEn' => isset($data['subtitleEn']) ? ($data['subtitleEn'] ?: null) : $existing['subtitleEn'],
             'image' => $data['image'] ?? $existing['image'],
+            'videoUrl' => isset($data['videoUrl']) ? ($data['videoUrl'] ?: null) : $existing['videoUrl'],
             'buttonText' => isset($data['buttonText']) ? ($data['buttonText'] ?: null) : $existing['buttonText'],
             'buttonTextEn' => isset($data['buttonTextEn']) ? ($data['buttonTextEn'] ?: null) : $existing['buttonTextEn'],
             'buttonUrl' => isset($data['buttonUrl']) ? ($data['buttonUrl'] ?: null) : $existing['buttonUrl'],
@@ -110,7 +112,7 @@ class SliderController extends BaseController
         ];
 
         $this->db->query(
-            'UPDATE Slider SET title = ?, titleEn = ?, subtitle = ?, subtitleEn = ?, image = ?, 
+            'UPDATE Slider SET title = ?, titleEn = ?, subtitle = ?, subtitleEn = ?, image = ?, videoUrl = ?, 
              buttonText = ?, buttonTextEn = ?, buttonUrl = ?, `order` = ?, isActive = ? WHERE id = ?',
             [
                 $updateData['title'],
@@ -118,6 +120,7 @@ class SliderController extends BaseController
                 $updateData['subtitle'],
                 $updateData['subtitleEn'],
                 $updateData['image'],
+                $updateData['videoUrl'],
                 $updateData['buttonText'],
                 $updateData['buttonTextEn'],
                 $updateData['buttonUrl'],
