@@ -70,8 +70,17 @@ class PageBlockController extends BaseController
             $pageId = $data['pageId'] ?? null;
         }
 
+        error_log("PageBlockController::create - pageId from URL: " . ($pageId ?? 'null') . ", pageId from body: " . ($data['pageId'] ?? 'null'));
+
         if (!$pageId) {
             Response::error('pageId is required', 400);
+        }
+
+        // Validate pageId exists
+        $page = $this->db->fetchOne('SELECT id FROM Page WHERE id = ?', [$pageId]);
+        if (!$page) {
+            error_log("PageBlockController::create - Page not found: " . $pageId);
+            Response::error('Page not found: ' . $pageId, 404);
         }
 
         // Get max order
@@ -132,15 +141,24 @@ class PageBlockController extends BaseController
 
         // Trim and validate ID
         $id = trim($id);
-        error_log("PageBlockController::update - Looking for block ID: " . $id . " (length: " . strlen($id) . ")");
+        error_log("PageBlockController::update - Received ID parameter: " . $id . " (length: " . strlen($id) . ")");
+
+        // First check if this ID is actually a Page ID (common mistake)
+        $pageCheck = $this->db->fetchOne('SELECT id FROM Page WHERE id = ?', [$id]);
+        if ($pageCheck) {
+            error_log("PageBlockController::update - ERROR: Page ID was passed instead of Block ID. Page ID: " . $id);
+            Response::error('Invalid request: Page ID was provided instead of Block ID. Please check the block ID.', 400);
+        }
 
         $existing = $this->db->fetchOne('SELECT * FROM PageBlock WHERE id = ?', [$id]);
         if (!$existing) {
             // Log untuk debugging - check if similar IDs exist
             $similar = $this->db->fetchAll('SELECT id FROM PageBlock WHERE id LIKE ? LIMIT 5', [$id . '%']);
-            error_log("PageBlockController::update - Block not found. ID: " . $id . " (length: " . strlen($id) . "). Similar IDs: " . json_encode($similar));
-            Response::error('Block not found. ID: ' . $id, 404);
+            error_log("PageBlockController::update - Block not found. Block ID: " . $id . " (length: " . strlen($id) . "). Similar IDs: " . json_encode($similar));
+            Response::error('Block not found. Block ID: ' . $id, 404);
         }
+        
+        error_log("PageBlockController::update - Block found. Block ID: " . $id . ", Page ID: " . $existing['pageId']);
 
         $data = $this->getJsonInput();
         $blockData = isset($data['data']) 

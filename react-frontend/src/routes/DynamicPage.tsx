@@ -42,8 +42,27 @@ export default function DynamicPage() {
         const foundCategory = categoriesData.find((c: any) => c.slug === slug && c.isActive)
 
         if (foundPage) {
-          const blocks = await apiClient.get(`/admin/pages/${foundPage.id}/blocks`).catch(() => [])
-          foundPage.blocks = blocks.filter((b: any) => b.isActive).sort((a: any, b: any) => a.order - b.order)
+          try {
+            const blocks = await apiClient.get(`/admin/pages/${foundPage.id}/blocks`)
+            // Ensure blocks have valid data structure
+            const validBlocks = (Array.isArray(blocks) ? blocks : []).map((b: any) => {
+              // Ensure data is properly structured
+              if (b.data && typeof b.data === 'string') {
+                try {
+                  b.data = JSON.parse(b.data)
+                } catch (e) {
+                  console.error('Error parsing block data:', e, 'Block:', b)
+                  b.data = {}
+                }
+              }
+              return b
+            }).filter((b: any) => b.isActive && b.id && b.id !== foundPage.id).sort((a: any, b: any) => a.order - b.order)
+            foundPage.blocks = validBlocks
+            console.log('Loaded blocks for page:', foundPage.id, 'Blocks:', validBlocks.length)
+          } catch (error) {
+            console.error('Error loading blocks:', error)
+            foundPage.blocks = []
+          }
           setPage(foundPage)
         } else if (foundCategory) {
           const posts = await apiClient.get('/admin/posts').then((p: any[]) => 
@@ -161,11 +180,11 @@ export default function DynamicPage() {
 
         <Footer 
           locale={locale}
+          logo={settings.website_logo?.value || null}
+          websiteName={settings.website_title?.value || null}
           address={settings.footer_address?.value || null}
           phone={settings.footer_phone?.value || null}
           email={settings.footer_email?.value || null}
-          androidAppUrl={settings.android_app_url?.value || null}
-          iosAppUrl={settings.ios_app_url?.value || null}
           facebookUrl={settings.facebook_url?.value || null}
           instagramUrl={settings.instagram_url?.value || null}
           youtubeUrl={settings.youtube_url?.value || null}
@@ -232,16 +251,20 @@ export default function DynamicPage() {
             showWebsiteName={settings.show_website_name?.value === 'true'}
           />
           {page.featuredImage && (
-            <div className="h-64 md:h-96 bg-gray-200 relative pt-20">
-              <img
-                src={getImageUrl(page.featuredImage)}
-                alt={page.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  console.error('Failed to load image:', page.featuredImage)
-                  e.currentTarget.src = '/placeholder-image.png'
-                }}
-              />
+            <div className="h-64 md:h-80 lg:h-96 bg-gradient-to-r from-gray-200 to-gray-300 relative pt-20 overflow-hidden">
+              <div className="absolute inset-0">
+                <img
+                  src={getImageUrl(page.featuredImage)}
+                  alt={page.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error('Failed to load image:', page.featuredImage)
+                    e.currentTarget.src = '/placeholder-image.png'
+                  }}
+                />
+                {/* Gradient overlay untuk readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+              </div>
             </div>
           )}
         </div>
@@ -254,44 +277,74 @@ export default function DynamicPage() {
         </div>
       ) : (
         // Only show content if there are no blocks or if hero-slider is not present
-        <div className="bg-white">
-          <article className={`${needsSpecialHeader || isAcademicTemplate ? 'bg-white' : 'max-w-4xl mx-auto'} px-4 sm:px-6 lg:px-8 ${needsSpecialHeader || isAcademicTemplate ? 'py-12 md:py-16' : 'py-12'}`}>
-            {!needsSpecialHeader && !isAcademicTemplate && (
-              <header className="mb-8">
-                <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
-                  {locale === 'en' && page.titleEn ? page.titleEn : page.title}
-                </h1>
-                {page.excerpt && (
-                  <p className="text-xl text-gray-600">
-                    {locale === 'en' && page.excerptEn ? page.excerptEn : page.excerpt}
-                  </p>
-                )}
-              </header>
-            )}
+        <div className="bg-gradient-to-b from-gray-50 to-white">
+          {/* Modern Hero Section */}
+          {!needsSpecialHeader && !isAcademicTemplate && (
+            <div className="relative bg-gradient-to-r from-primary-600 to-primary-700 text-white py-16 md:py-24 overflow-hidden">
+              {/* Decorative background elements */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+                <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/2 translate-y-1/2"></div>
+              </div>
+              
+              <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-3xl">
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                    {locale === 'en' && page.titleEn ? page.titleEn : page.title}
+                  </h1>
+                  {page.excerpt && (
+                    <p className="text-xl md:text-2xl text-primary-100 leading-relaxed">
+                      {locale === 'en' && page.excerptEn ? page.excerptEn : page.excerpt}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
-            {(page.content || page.contentEn) && (
-              <div
-                className={`${needsSpecialHeader ? 'max-w-5xl mx-auto' : ''} prose prose-lg max-w-none`}
-                dangerouslySetInnerHTML={{
-                  __html: locale === 'en' && page.contentEn ? page.contentEn : page.content
-                }}
-              />
-            )}
+          {/* Content Section */}
+          <article className={`${needsSpecialHeader || isAcademicTemplate ? 'bg-white' : ''} ${needsSpecialHeader || isAcademicTemplate ? 'py-12 md:py-16' : 'py-16 md:py-24'}`}>
+            <div className={`${needsSpecialHeader || isAcademicTemplate ? 'max-w-5xl' : 'max-w-4xl'} mx-auto px-4 sm:px-6 lg:px-8`}>
+              {(page.content || page.contentEn) && (
+                <div
+                  className={`prose prose-lg md:prose-xl max-w-none 
+                    prose-headings:text-gray-900 prose-headings:font-bold
+                    prose-h1:text-4xl prose-h1:md:text-5xl prose-h1:mb-6 prose-h1:mt-8
+                    prose-h2:text-3xl prose-h2:md:text-4xl prose-h2:mb-4 prose-h2:mt-8 prose-h2:text-primary-600
+                    prose-h3:text-2xl prose-h3:md:text-3xl prose-h3:mb-3 prose-h3:mt-6 prose-h3:text-gray-800
+                    prose-p:text-gray-700 prose-p:leading-relaxed prose-p:text-base prose-p:md:text-lg prose-p:mb-4
+                    prose-a:text-primary-600 prose-a:font-medium prose-a:no-underline hover:prose-a:underline
+                    prose-strong:text-gray-900 prose-strong:font-bold
+                    prose-ul:list-disc prose-ul:pl-6 prose-ul:mb-4
+                    prose-ol:list-decimal prose-ol:pl-6 prose-ol:mb-4
+                    prose-li:text-gray-700 prose-li:mb-2
+                    prose-blockquote:border-l-4 prose-blockquote:border-primary-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600
+                    prose-img:rounded-lg prose-img:shadow-lg prose-img:my-8
+                    prose-code:text-primary-600 prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded
+                    prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:rounded-lg prose-pre:p-4
+                    prose-hr:border-gray-300 prose-hr:my-8
+                  `}
+                  dangerouslySetInnerHTML={{
+                    __html: locale === 'en' && page.contentEn ? page.contentEn : page.content
+                  }}
+                />
+              )}
+            </div>
           </article>
         </div>
       )}
 
-      <Footer 
-        locale={locale}
-        address={settings.footer_address?.value || null}
-        phone={settings.footer_phone?.value || null}
-        email={settings.footer_email?.value || null}
-        androidAppUrl={settings.android_app_url?.value || null}
-        iosAppUrl={settings.ios_app_url?.value || null}
-        facebookUrl={settings.facebook_url?.value || null}
-        instagramUrl={settings.instagram_url?.value || null}
-        youtubeUrl={settings.youtube_url?.value || null}
-      />
+        <Footer 
+          locale={locale}
+          logo={settings.website_logo?.value || null}
+          websiteName={settings.website_title?.value || null}
+          address={settings.footer_address?.value || null}
+          phone={settings.footer_phone?.value || null}
+          email={settings.footer_email?.value || null}
+          facebookUrl={settings.facebook_url?.value || null}
+          instagramUrl={settings.instagram_url?.value || null}
+          youtubeUrl={settings.youtube_url?.value || null}
+        />
 
       <WhatsAppButton 
         phoneNumber={settings.whatsapp_phone?.value || null}

@@ -11,6 +11,15 @@ export default function SettingsPage() {
     loadSettings()
   }, [])
 
+  useEffect(() => {
+    // Set document title dari settings
+    if (settings.website_title?.value) {
+      document.title = settings.website_title.value
+    } else {
+      document.title = 'Pengaturan - CMS Sekolah'
+    }
+  }, [settings])
+
   async function loadSettings() {
     try {
       const data = await apiClient.get('/admin/settings', false) // false = tidak perlu auth untuk settings

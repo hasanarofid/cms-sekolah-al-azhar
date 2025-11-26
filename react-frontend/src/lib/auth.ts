@@ -111,11 +111,19 @@ export async function getSession(): Promise<User | null> {
 
   try {
     const endpoint = buildUrl('/auth/session');
+    
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
     const response = await fetch(endpoint, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       // Token invalid, clear storage
@@ -133,7 +141,10 @@ export async function getSession(): Promise<User | null> {
       return data.user;
     }
     return null;
-  } catch {
+  } catch (error) {
+    // Network error or timeout - don't clear token, just return null
+    // This allows retry without forcing logout
+    console.error('Session check failed:', error);
     return null;
   }
 }

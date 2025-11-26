@@ -1,31 +1,25 @@
-# Enable Rewrite Engine
-RewriteEngine On
+# PHP Configuration untuk Upload File
+# Increase upload limits untuk video files
 
-# Handle CORS preflight requests
-RewriteCond %{REQUEST_METHOD} OPTIONS
-RewriteRule ^(.*)$ index.php [QSA,L]
+# Upload max file size (50MB untuk video)
+php_value upload_max_filesize 50M
+php_value post_max_size 55M
+php_value max_execution_time 300
+php_value max_input_time 300
+php_value memory_limit 128M
 
-# Serve static files directly (uploads, images, etc.)
-# JANGAN route ke index.php jika file/directory benar-benar ada
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
+# Enable file uploads
+php_flag file_uploads On
 
-# Route all other requests to index.php (API endpoints)
-RewriteRule ^(.*)$ index.php [QSA,L]
-
-# Security headers
-<IfModule mod_headers.c>
-    Header set X-Content-Type-Options "nosniff"
-    Header set X-Frame-Options "SAMEORIGIN"
-    Header set X-XSS-Protection "1; mode=block"
+# Routing untuk API
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # Don't rewrite if file exists
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # Route semua request ke index.php
+    RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>
-
-# PHP settings
-<IfModule mod_php7.c>
-    php_value upload_max_filesize 10M
-    php_value post_max_size 10M
-    php_value max_execution_time 300
-    php_value max_input_time 300
-</IfModule>
-

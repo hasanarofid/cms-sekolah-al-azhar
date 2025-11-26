@@ -14,7 +14,7 @@ import { Play, ChevronUp, ChevronDown } from 'lucide-react'
 interface PageBlock {
   id: string
   type: string
-  data: string // JSON string
+  data: string | object // JSON string atau object (backend sudah decode)
   isActive: boolean
   order: number
 }
@@ -35,7 +35,19 @@ export function BlockRenderer({ blocks, locale = 'id' }: BlockRendererProps) {
     <>
       {activeBlocks.map((block) => {
         try {
-          const blockData = JSON.parse(block.data)
+          // Backend sudah mengembalikan data sebagai object, tapi kadang masih string
+          let blockData: any
+          if (typeof block.data === 'string') {
+            try {
+              blockData = JSON.parse(block.data)
+            } catch (parseError) {
+              console.error(`Error parsing block data for block ${block.id}:`, parseError, 'Raw data:', block.data)
+              // Try to handle invalid JSON - maybe it's already partially parsed
+              blockData = block.data ? { content: block.data } : {}
+            }
+          } else {
+            blockData = block.data || {}
+          }
 
           switch (block.type) {
             case 'hero-slider':
@@ -114,20 +126,43 @@ export function BlockRenderer({ blocks, locale = 'id' }: BlockRendererProps) {
               return (
                 <div
                   key={block.id}
-                  className="prose prose-lg max-w-none px-4 sm:px-6 lg:px-8 py-8"
+                  className="prose prose-lg md:prose-xl max-w-none px-4 sm:px-6 lg:px-8 py-12 md:py-16
+                    prose-headings:text-gray-900 prose-headings:font-bold
+                    prose-h1:text-4xl prose-h1:md:text-5xl prose-h1:mb-6 prose-h1:mt-8
+                    prose-h2:text-3xl prose-h2:md:text-4xl prose-h2:mb-4 prose-h2:mt-8 prose-h2:text-primary-600
+                    prose-h3:text-2xl prose-h3:md:text-3xl prose-h3:mb-3 prose-h3:mt-6 prose-h3:text-gray-800
+                    prose-p:text-gray-700 prose-p:leading-relaxed prose-p:text-base prose-p:md:text-lg prose-p:mb-4
+                    prose-a:text-primary-600 prose-a:font-medium prose-a:no-underline hover:prose-a:underline
+                    prose-strong:text-gray-900 prose-strong:font-bold
+                    prose-ul:list-disc prose-ul:pl-6 prose-ul:mb-4
+                    prose-ol:list-decimal prose-ol:pl-6 prose-ol:mb-4
+                    prose-li:text-gray-700 prose-li:mb-2
+                    prose-blockquote:border-l-4 prose-blockquote:border-primary-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600
+                    prose-img:rounded-lg prose-img:shadow-lg prose-img:my-8
+                    prose-code:text-primary-600 prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded
+                    prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:rounded-lg prose-pre:p-4
+                    prose-hr:border-gray-300 prose-hr:my-8
+                  "
                   dangerouslySetInnerHTML={{ __html: blockData.content || '' }}
                 />
               )
 
             case 'image':
               return (
-                <div key={block.id} className="my-8 px-4 sm:px-6 lg:px-8">
+                <div key={block.id} className="my-12 md:my-16 px-4 sm:px-6 lg:px-8">
                   {blockData.image && (
-                    <img
-                      src={getImageUrl(blockData.image)}
-                      alt={blockData.alt || ''}
-                      className="w-full rounded-lg"
-                    />
+                    <div className="max-w-5xl mx-auto">
+                      <img
+                        src={getImageUrl(blockData.image)}
+                        alt={blockData.alt || ''}
+                        className="w-full rounded-xl shadow-2xl transition-transform duration-300 hover:scale-[1.02]"
+                      />
+                      {blockData.alt && (
+                        <p className="text-center text-sm text-gray-500 mt-4 italic">
+                          {blockData.alt}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               )
@@ -167,7 +202,19 @@ export function BlockRenderer({ blocks, locale = 'id' }: BlockRendererProps) {
           }
         } catch (error) {
           console.error(`Error rendering block ${block.id}:`, error)
-          return null
+          console.error('Block data:', block.data)
+          console.error('Block type:', block.type)
+          // Return a fallback UI instead of null
+          return (
+            <div key={block.id} className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg my-4">
+              <p className="text-yellow-800 text-sm">
+                Error rendering block: {block.type} (ID: {block.id})
+              </p>
+              <p className="text-yellow-600 text-xs mt-1">
+                {error instanceof Error ? error.message : 'Unknown error'}
+              </p>
+            </div>
+          )
         }
       })}
     </>

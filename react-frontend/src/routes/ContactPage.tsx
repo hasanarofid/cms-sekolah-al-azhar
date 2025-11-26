@@ -119,11 +119,11 @@ export default function ContactPage() {
 
       <Footer 
         locale={locale}
+        logo={settings.website_logo?.value || null}
+        websiteName={settings.website_title?.value || null}
         address={settings.footer_address?.value || null}
         phone={settings.footer_phone?.value || null}
         email={settings.footer_email?.value || null}
-        androidAppUrl={settings.android_app_url?.value || null}
-        iosAppUrl={settings.ios_app_url?.value || null}
         facebookUrl={settings.facebook_url?.value || null}
         instagramUrl={settings.instagram_url?.value || null}
         youtubeUrl={settings.youtube_url?.value || null}

@@ -32,8 +32,8 @@ export function useSettings(settings: Record<string, Setting | undefined>) {
     if (settings.website_title?.value) {
       document.title = settings.website_title.value
     } else {
-      // Fallback jika belum ada setting
-      document.title = 'Al Azhar IIBS'
+      // Fallback jika belum ada setting - gunakan generic title
+      document.title = 'CMS Sekolah'
     }
   }, [settings])
 }

@@ -9,7 +9,12 @@ import SlidersPage from './routes/admin/SlidersPage'
 import SliderNewPage from './routes/admin/SliderNewPage'
 import SliderEditPage from './routes/admin/SliderEditPage'
 import HomeSectionsPage from './routes/admin/HomeSectionsPage'
+import HomeSectionNewPage from './routes/admin/HomeSectionNewPage'
+import HomeSectionEditPage from './routes/admin/HomeSectionEditPage'
 import FAQsPage from './routes/admin/FAQsPage'
+import FAQNewPage from './routes/admin/FAQNewPage'
+import FAQEditPage from './routes/admin/FAQEditPage'
+import SplitScreensPage from './routes/admin/SplitScreensPage'
 import FiguresPage from './routes/admin/FiguresPage'
 import PartnershipsPage from './routes/admin/PartnershipsPage'
 import PagesPage from './routes/admin/PagesPage'
@@ -42,7 +47,11 @@ function App() {
         <Route path="/admin/sliders/new" element={<SliderNewPage />} />
         <Route path="/admin/sliders/:id" element={<SliderEditPage />} />
         <Route path="/admin/home-sections" element={<HomeSectionsPage />} />
+        <Route path="/admin/home-sections/new" element={<HomeSectionNewPage />} />
+        <Route path="/admin/home-sections/:id" element={<HomeSectionEditPage />} />
         <Route path="/admin/faqs" element={<FAQsPage />} />
+        <Route path="/admin/faqs/new" element={<FAQNewPage />} />
+        <Route path="/admin/faqs/:id" element={<FAQEditPage />} />
         <Route path="/admin/figures" element={<FiguresPage />} />
         <Route path="/admin/partnerships" element={<PartnershipsPage />} />
         <Route path="/admin/pages" element={<PagesPage />} />
@@ -52,7 +61,7 @@ function App() {
         <Route path="/admin/menus" element={<MenusPage />} />
         <Route path="/admin/categories" element={<CategoriesPage />} />
         <Route path="/admin/settings" element={<SettingsPage />} />
-        <Route path="/admin/split-screens" element={<PlaceholderPage title="Split Screen Section" />} />
+        <Route path="/admin/split-screens" element={<SplitScreensPage />} />
         <Route path="/admin/masjid-al-fatih" element={<PlaceholderPage title="Masjid AL FATIH" />} />
         <Route path="/admin/university-maps" element={<PlaceholderPage title="University Map" />} />
         <Route path="/admin/global-stages" element={<PlaceholderPage title="Global Stage" />} />

@@ -12,6 +12,8 @@ interface Slider {
   subtitleEn?: string | null
   image: string
   videoUrl?: string | null
+  videoFile?: string | null // Video file path untuk autoplay background video
+  videoDuration?: number | null // Durasi video dalam detik
   buttonText?: string | null
   buttonTextEn?: string | null
   buttonUrl?: string | null
@@ -27,9 +29,29 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
   const [activeVideo, setActiveVideo] = useState<{ sliderId: string; videoId: string } | null>(null)
+  const [videoLoaded, setVideoLoaded] = useState<{ [key: string]: boolean }>({})
   const autoPlayResumeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const activeSliders = sliders.filter(s => s.isActive !== false)
+
+  // Debug logging
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('[HeroSlider] Sliders received:', sliders)
+      console.log('[HeroSlider] Active sliders:', activeSliders)
+      activeSliders.forEach((slider, index) => {
+        console.log(`[HeroSlider] Slider ${index + 1}:`, {
+          id: slider.id,
+          title: slider.title,
+          image: slider.image,
+          imageUrl: getImageUrl(slider.image),
+          videoFile: slider.videoFile,
+          videoUrl: slider.videoUrl,
+          isActive: slider.isActive
+        })
+      })
+    }
+  }, [sliders, activeSliders])
 
   const clearAutoPlayTimeout = () => {
     if (autoPlayResumeTimeout.current) {
@@ -57,15 +79,26 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
     }
   }, [])
 
+  // Auto-advance slides based on video duration or default 5 seconds
   useEffect(() => {
     if (!isAutoPlaying || activeSliders.length <= 1) return
 
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % activeSliders.length)
-    }, 5000) // Change slide every 5 seconds
+    const currentSlider = activeSliders[currentIndex]
+    const hasVideo = currentSlider?.videoFile
+    const videoDuration = currentSlider?.videoDuration
 
-    return () => clearInterval(interval)
-  }, [isAutoPlaying, activeSliders.length])
+    // If current slide has video with known duration, use that duration
+    // Otherwise, use default 5 seconds
+    const slideDuration = (hasVideo && videoDuration && videoDuration > 0) 
+      ? (videoDuration * 1000) // Convert seconds to milliseconds
+      : 5000 // Default 5 seconds
+
+    const timeout = setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % activeSliders.length)
+    }, slideDuration)
+
+    return () => clearTimeout(timeout)
+  }, [isAutoPlaying, activeSliders.length, currentIndex, activeSliders])
 
   if (activeSliders.length === 0) {
     return (
@@ -101,6 +134,19 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
   // Calculate the transform value to shift the entire slide strip
   // Ex: Slide 0: translateX(0), Slide 1: translateX(-100%), Slide 2: translateX(-200%)
   const transformValue = `translateX(-${currentIndex * 100}%)`
+  
+  // Debug transform value
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('[HeroSlider] Transform:', {
+        currentIndex,
+        totalSliders: activeSliders.length,
+        transformValue,
+        currentSliderId: currentSlider?.id,
+        currentSliderImage: currentSlider?.image
+      })
+    }
+  }, [currentIndex, activeSliders.length, transformValue, currentSlider])
 
   // Helper to determine if the URL is external
   const isExternalUrl = (url: string | null | undefined) => 
@@ -153,25 +199,115 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
           className="flex h-full transition-transform duration-700 ease-in-out"
           style={{
             width: `${activeSliders.length * 100}%`,
-            transform: transformValue, 
+            transform: transformValue,
+            position: 'relative'
           }}
         >
-          {activeSliders.map((slider) => (
+          {activeSliders.map((slider, mapIndex) => (
             <div
               key={slider.id}
               // Each slide must take up 1/Nth of the total width of the 'flex' container
               // This ensures each slide is 100% of the viewport width.
-              style={{ width: `${100 / activeSliders.length}%` }}
-              className="h-full flex-shrink-0 relative"
+              style={{ 
+                width: `${100 / activeSliders.length}%`,
+                flexShrink: 0,
+                position: 'relative',
+                height: '100%'
+              }}
+              className="h-full relative"
+              data-slider-index={mapIndex}
+              data-slider-id={slider.id}
             >
-              {/* Slide Background Image */}
-              <div
-                className="w-full h-full bg-cover bg-center"
-                style={{ backgroundImage: `url(${getImageUrl(slider.image)})` }}
-              >
-                {/* Dark Gradient Overlay for Readability (like the example) */}
-                <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40"></div>
-              </div>
+              {/* Slide Background - Video atau Image */}
+              {slider.videoFile && slider.videoFile.trim() !== '' && slider.videoFile !== 'null' ? (
+                // Video Background dengan Autoplay (seperti website referensi)
+                <div className="absolute inset-0 w-full h-full">
+                  {/* Image sebagai background layer (selalu tampil sebagai fallback) */}
+                  <div
+                    className="absolute inset-0 w-full h-full bg-cover bg-center"
+                    style={{ 
+                      backgroundImage: `url(${getImageUrl(slider.image)})`,
+                      zIndex: 0
+                    }}
+                  >
+                    {/* Dark Gradient Overlay for Readability */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40"></div>
+                  </div>
+                  
+                  {/* Video layer di atas image */}
+                  <video
+                    autoPlay
+                    muted
+                    loop={!slider.videoDuration} // Don't loop if we have duration (will auto-advance)
+                    playsInline
+                    preload="auto"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ 
+                      zIndex: videoLoaded[slider.id] ? 1 : 0,
+                      opacity: videoLoaded[slider.id] ? 1 : 0,
+                      transition: 'opacity 0.5s ease-in-out'
+                    }}
+                    onEnded={() => {
+                      // Auto-advance to next slide when video ends (if not looping)
+                      if (slider.videoDuration && isAutoPlaying && activeSliders.length > 1) {
+                        setCurrentIndex((prev) => (prev + 1) % activeSliders.length)
+                      }
+                    }}
+                    onError={(e) => {
+                      console.error('Video load error, hiding video and showing image fallback:', {
+                        videoFile: slider.videoFile,
+                        videoUrl: getImageUrl(slider.videoFile),
+                        sliderId: slider.id
+                      })
+                      // Hide video jika error, image background akan terlihat
+                      setVideoLoaded(prev => ({ ...prev, [slider.id]: false }))
+                      const videoElement = e.currentTarget
+                      videoElement.style.display = 'none'
+                    }}
+                    onLoadedData={() => {
+                      setVideoLoaded(prev => ({ ...prev, [slider.id]: true }))
+                      if (import.meta.env.DEV) {
+                        console.log('Video loaded successfully:', {
+                          videoFile: slider.videoFile,
+                          sliderId: slider.id
+                        })
+                      }
+                    }}
+                    onCanPlay={() => {
+                      // Video siap untuk diputar
+                      setVideoLoaded(prev => ({ ...prev, [slider.id]: true }))
+                    }}
+                  >
+                    <source src={getImageUrl(slider.videoFile)} type="video/mp4" />
+                    <source src={getImageUrl(slider.videoFile)} type="video/webm" />
+                    Your browser does not support the video tag.
+                  </video>
+                  
+                  {/* Dark Gradient Overlay for Readability (di atas video) */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40 z-10"></div>
+                </div>
+              ) : (
+                // Image Background (default) - menggunakan background-image untuk lebih reliable
+                <div 
+                  className="absolute inset-0 w-full h-full bg-cover bg-center bg-gray-200"
+                  style={{ 
+                    zIndex: 0,
+                    backgroundImage: slider.image && slider.image.trim() !== '' && slider.image !== 'null' 
+                      ? `url(${getImageUrl(slider.image)})` 
+                      : 'none',
+                    backgroundColor: '#f3f4f6'
+                  }}
+                >
+                  {/* Fallback jika image tidak ada atau gagal load */}
+                  {(!slider.image || slider.image.trim() === '' || slider.image === 'null') && (
+                    <div className="w-full h-full flex items-center justify-center" style={{ zIndex: 0 }}>
+                      <p className="text-gray-500">Gambar tidak tersedia</p>
+                    </div>
+                  )}
+                  {/* Dark Gradient Overlay for Readability */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40" style={{ zIndex: 1 }}></div>
+                </div>
+              )}
             </div>
           ))}
         </div>

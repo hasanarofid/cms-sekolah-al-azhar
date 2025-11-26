@@ -6,14 +6,14 @@ import {
   Sliders, 
   FileText, 
   Newspaper, 
-  Image, 
+  // Image, 
   Menu as MenuIcon, 
   Settings,
   ChevronDown,
   ChevronRight,
   Layout,
-  GraduationCap,
-  School
+  // GraduationCap,
+  // School
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
@@ -54,43 +54,43 @@ const menuItems: MenuItem[] = [
         href: '/admin/faqs',
         icon: <Layout size={18} />,
       },
-      {
-        title: 'Masjid AL FATIH',
-        href: '/admin/masjid-al-fatih',
-        icon: <Layout size={18} />,
-      },
-      {
-        title: 'University Map',
-        href: '/admin/university-maps',
-        icon: <Layout size={18} />,
-      },
-      {
-        title: 'Tokoh-Tokoh',
-        href: '/admin/figures',
-        icon: <Layout size={18} />,
-      },
-      {
-        title: 'Global Stage',
-        href: '/admin/global-stages',
-        icon: <Layout size={18} />,
-      },
-      {
-        title: 'Kerjasama',
-        href: '/admin/partnerships',
-        icon: <Layout size={18} />,
-      },
+      // {
+      //   title: 'Masjid AL FATIH',
+      //   href: '/admin/masjid-al-fatih',
+      //   icon: <Layout size={18} />,
+      // },
+      // {
+      //   title: 'University Map',
+      //   href: '/admin/university-maps',
+      //   icon: <Layout size={18} />,
+      // },
+      // {
+      //   title: 'Tokoh-Tokoh',
+      //   href: '/admin/figures',
+      //   icon: <Layout size={18} />,
+      // },
+      // {
+      //   title: 'Global Stage',
+      //   href: '/admin/global-stages',
+      //   icon: <Layout size={18} />,
+      // },
+      // {
+      //   title: 'Kerjasama',
+      //   href: '/admin/partnerships',
+      //   icon: <Layout size={18} />,
+      // },
     ],
   },
-  {
-    title: 'SMP',
-    href: '/admin/pages?slug=smp',
-    icon: <School size={20} />,
-  },
-  {
-    title: 'SMA',
-    href: '/admin/pages?slug=sma',
-    icon: <GraduationCap size={20} />,
-  },
+  // {
+  //   title: 'SMP',
+  //   href: '/admin/pages?slug=smp',
+  //   icon: <School size={20} />,
+  // },
+  // {
+  //   title: 'SMA',
+  //   href: '/admin/pages?slug=sma',
+  //   icon: <GraduationCap size={20} />,
+  // },
   {
     title: 'Halaman',
     href: '/admin/pages',
@@ -106,16 +106,16 @@ const menuItems: MenuItem[] = [
     href: '/admin/menus',
     icon: <MenuIcon size={20} />,
   },
-  {
-    title: 'Kategori',
-    href: '/admin/categories',
-    icon: <Layout size={20} />,
-  },
-  {
-    title: 'Media',
-    href: '/admin/media',
-    icon: <Image size={20} />,
-  },
+  // {
+  //   title: 'Kategori',
+  //   href: '/admin/categories',
+  //   icon: <Layout size={20} />,
+  // },
+  // {
+  //   title: 'Media',
+  //   href: '/admin/media',
+  //   icon: <Image size={20} />,
+  // },
   {
     title: 'Pengaturan',
     href: '/admin/settings',

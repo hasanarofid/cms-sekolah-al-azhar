@@ -1,12 +1,13 @@
-import { Facebook, Instagram, Youtube } from 'lucide-react'
+import { Facebook, Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react'
+import { getImageUrl } from '../lib/utils-image-url'
 
 interface FooterProps {
   locale?: 'id' | 'en'
+  logo?: string | null
+  websiteName?: string | null
   address?: string | null
   phone?: string | null
   email?: string | null
-  androidAppUrl?: string | null
-  iosAppUrl?: string | null
   facebookUrl?: string | null
   instagramUrl?: string | null
   youtubeUrl?: string | null
@@ -14,103 +15,176 @@ interface FooterProps {
 
 export function Footer({ 
   locale = 'id',
+  logo,
+  websiteName,
   address,
   phone,
   email,
-  androidAppUrl,
-  iosAppUrl,
   facebookUrl,
   instagramUrl,
   youtubeUrl,
 }: FooterProps) {
+  const currentYear = new Date().getFullYear()
+  const displayName = websiteName || ''
+
   return (
-    <footer className="bg-primary-800 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-          {/* Left: Contact Info */}
-          <div>
-            <h3 className="text-base font-bold mb-4 leading-tight text-white">
+    <footer className="bg-gradient-to-b from-primary-800 to-primary-900 text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        {/* Main Footer Content */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+          {/* Brand Section */}
+          <div className="lg:col-span-1">
+            <div className="mb-6">
+              {logo ? (
+                <div className="flex items-center space-x-3 mb-4">
+                  <img
+                    src={getImageUrl(logo)}
+                    alt={displayName}
+                    className="h-14 md:h-20 w-auto object-contain"
+                    onError={(e) => {
+                      console.error('Failed to load footer logo:', logo)
+                      e.currentTarget.style.display = 'none'
+                    }}
+                  />
+                  {websiteName && (
+                    <h3 className="text-xl md:text-2xl font-bold text-white">
+                      {websiteName}
+                    </h3>
+                  )}
+                </div>
+              ) : websiteName ? (
+                <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white">
+                  {websiteName}
+                </h3>
+              ) : null}
+            </div>
+            <p className="text-primary-100 text-sm leading-relaxed mb-6">
               {locale === 'en' 
-                ? 'Qur\'anic Learning Courtesy Oriented World Class Education'
-                : 'Qur\'anic Learning Courtesy Oriented World Class Education'}
-            </h3>
-            <p className="text-sm text-primary-100 mb-4 leading-relaxed">
-              {address || 'Jl. Raya Solo - Tawangmangu, Gedangan, Salam, Kec. Karangpandan, Kabupaten Karanganyar, Jawa Tengah 57791'}
+                ? 'Qur\'anic Learning, Courtesy Oriented and World Class Education'
+                : 'Menjadi Sekolah Menengah Atas yang unggul dalam membina generasi Qur\'ani, berprestasi, dan berwawasan global, dengan mengintegrasikan nilai-nilai Islam dan Al-Qur\'an dalam pengembangan ilmu pengetahuan, sains, dan teknologi'}
             </p>
-            <div className="space-y-2 text-sm text-primary-100">
+            
+            {/* Social Media Links */}
+            {(facebookUrl || instagramUrl || youtubeUrl) && (
+              <div className="flex space-x-4">
+                {facebookUrl && (
+                  <a 
+                    href={facebookUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="bg-primary-700 hover:bg-primary-600 p-3 rounded-full transition-all duration-300 transform hover:scale-110"
+                    aria-label="Facebook"
+                  >
+                    <Facebook size={20} className="text-white" />
+                  </a>
+                )}
+                {instagramUrl && (
+                  <a 
+                    href={instagramUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="bg-primary-700 hover:bg-primary-600 p-3 rounded-full transition-all duration-300 transform hover:scale-110"
+                    aria-label="Instagram"
+                  >
+                    <Instagram size={20} className="text-white" />
+                  </a>
+                )}
+                {youtubeUrl && (
+                  <a 
+                    href={youtubeUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="bg-primary-700 hover:bg-primary-600 p-3 rounded-full transition-all duration-300 transform hover:scale-110"
+                    aria-label="YouTube"
+                  >
+                    <Youtube size={20} className="text-white" />
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Contact Information */}
+          <div className="lg:col-span-2">
+            <h4 className="text-lg font-bold mb-6 text-white">
+              {locale === 'en' ? 'Contact Information' : 'Informasi Kontak'}
+            </h4>
+            <div className="space-y-4">
+              {address && (
+                <div className="flex items-start space-x-3">
+                  <MapPin className="mt-1 text-primary-300 flex-shrink-0" size={20} />
+                  <p className="text-primary-100 text-sm leading-relaxed">
+                    {address}
+                  </p>
+                </div>
+              )}
               {phone && (
-                <p>
-                  <span className="font-semibold text-white">Call Center:</span> {phone}
-                </p>
+                <div className="flex items-center space-x-3">
+                  <Phone className="text-primary-300 flex-shrink-0" size={20} />
+                  <a 
+                    href={`tel:${phone.replace(/\s/g, '')}`}
+                    className="text-primary-100 hover:text-white transition-colors text-sm"
+                  >
+                    {phone}
+                  </a>
+                </div>
               )}
               {email && (
-                <p>
-                  <span className="font-semibold text-white">Email:</span> {email}
-                </p>
+                <div className="flex items-center space-x-3">
+                  <Mail className="text-primary-300 flex-shrink-0" size={20} />
+                  <a 
+                    href={`mailto:${email}`}
+                    className="text-primary-100 hover:text-white transition-colors text-sm"
+                  >
+                    {email}
+                  </a>
+                </div>
               )}
             </div>
           </div>
 
-          {/* Center: Instagram Embed (placeholder) */}
-          <div className="flex items-center justify-center">
-            <div className="bg-primary-900 rounded-lg p-4 w-full aspect-square flex items-center justify-center min-h-[300px]">
-              <p className="text-primary-200 text-sm text-center">
-                {locale === 'en' ? 'Instagram Embed' : 'Embed Instagram'}
-              </p>
-            </div>
-          </div>
-
-          {/* Right: Download App */}
+          {/* Quick Links */}
           <div>
-            <h4 className="font-semibold mb-4 text-base text-white">
-              {locale === 'en' ? 'Download App' : 'Unduh Aplikasi'}
+            <h4 className="text-lg font-bold mb-6 text-white">
+              {locale === 'en' ? 'Quick Links' : 'Tautan Cepat'}
             </h4>
-            <div className="space-y-3 mb-6">
-              {androidAppUrl ? (
-                <a href={androidAppUrl} target="_blank" rel="noopener noreferrer" className="block">
-                  <div className="bg-primary-900 hover:bg-primary-700 px-4 py-3 rounded-lg text-sm transition-colors text-center text-white">
-                    {locale === 'en' ? 'Android Users' : 'Pengguna Android'}
-                  </div>
+            <ul className="space-y-3">
+              <li>
+                <a href="/" className="text-primary-100 hover:text-white transition-colors text-sm">
+                  {locale === 'en' ? 'Home' : 'Beranda'}
                 </a>
-              ) : (
-                <div className="bg-primary-900 px-4 py-3 rounded-lg text-sm text-center text-primary-200">
-                  {locale === 'en' ? 'Android Users' : 'Pengguna Android'}
-                </div>
-              )}
-              {iosAppUrl ? (
-                <a href={iosAppUrl} target="_blank" rel="noopener noreferrer" className="block">
-                  <div className="bg-primary-900 hover:bg-primary-700 px-4 py-3 rounded-lg text-sm transition-colors text-center text-white">
-                    {locale === 'en' ? 'iOS Users' : 'Pengguna IOS'}
-                  </div>
+              </li>
+              <li>
+                <a href="/selayang-pandang" className="text-primary-100 hover:text-white transition-colors text-sm">
+                  {locale === 'en' ? 'About Us' : 'Selayang Pandang'}
                 </a>
-              ) : (
-                <div className="bg-primary-900 px-4 py-3 rounded-lg text-sm text-center text-primary-200">
-                  {locale === 'en' ? 'iOS Users' : 'Pengguna IOS'}
-                </div>
-              )}
-            </div>
-            <div className="flex space-x-4">
-              {facebookUrl && (
-                <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="text-primary-200 hover:text-white transition-colors">
-                  <Facebook size={20} />
+              </li>
+              <li>
+                <a href="/visi-misi" className="text-primary-100 hover:text-white transition-colors text-sm">
+                  {locale === 'en' ? 'Vision & Mission' : 'Visi & Misi'}
                 </a>
-              )}
-              {instagramUrl && (
-                <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="text-primary-200 hover:text-white transition-colors">
-                  <Instagram size={20} />
+              </li>
+              <li>
+                <a href="/kontak" className="text-primary-100 hover:text-white transition-colors text-sm">
+                  {locale === 'en' ? 'Contact' : 'Kontak'}
                 </a>
-              )}
-              {youtubeUrl && (
-                <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-primary-200 hover:text-white transition-colors">
-                  <Youtube size={20} />
-                </a>
-              )}
-            </div>
+              </li>
+            </ul>
           </div>
         </div>
 
-        <div className="border-t border-primary-700 mt-8 pt-8 text-center text-sm text-primary-200">
-          <p>&copy; {new Date().getFullYear()}. Al Azhar IIBS</p>
+        {/* Copyright Section */}
+        <div className="border-t border-primary-700 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <p className="text-primary-200 text-sm text-center md:text-left">
+              &copy; {currentYear} {displayName && `${displayName}. `}{locale === 'en' ? 'All rights reserved.' : 'Hak cipta dilindungi.'}
+            </p>
+            <p className="text-primary-200 text-sm text-center md:text-right">
+              {locale === 'en' 
+                ? 'Qur\'anic Learning, Courtesy Oriented and World Class Education'
+                : 'Menjadi Sekolah Menengah Atas yang unggul dalam membina generasi Qur\'ani, berprestasi, dan berwawasan global, dengan mengintegrasikan nilai-nilai Islam dan Al-Qur\'an dalam pengembangan ilmu pengetahuan, sains, dan teknologi'}
+            </p>
+          </div>
         </div>
       </div>
     </footer>

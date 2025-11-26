@@ -21,7 +21,9 @@ define('JWT_SECRET', getenv('JWT_SECRET') ?: 'your-secret-key-change-this-in-pro
 // Upload Configuration
 define('UPLOAD_DIR', __DIR__ . '/../public/uploads');
 define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
+define('MAX_VIDEO_SIZE', 50 * 1024 * 1024); // 50MB untuk video
 define('ALLOWED_IMAGE_TYPES', ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']);
+define('ALLOWED_VIDEO_TYPES', ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-m4v', 'application/octet-stream']);
 
 // Timezone
 date_default_timezone_set('Asia/Jakarta');

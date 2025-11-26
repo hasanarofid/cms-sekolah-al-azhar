@@ -19,6 +19,7 @@ const sliderSchema = z.object({
     (val) => !val || youtubeUrlRegex.test(val),
     { message: 'Gunakan tautan YouTube yang valid' }
   ),
+  videoFile: z.string().optional(),
   buttonText: z.string().optional(),
   buttonTextEn: z.string().optional(),
   buttonUrl: z.string().refine(
@@ -40,6 +41,8 @@ interface SliderFormProps {
     subtitleEn?: string | null
     image: string
     videoUrl?: string | null
+    videoFile?: string | null
+    videoDuration?: number | null
     buttonText?: string | null
     buttonTextEn?: string | null
     buttonUrl?: string | null
@@ -53,8 +56,15 @@ export function SliderForm({ slider }: SliderFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [uploadingVideo, setUploadingVideo] = useState(false)
   const [previewImage, setPreviewImage] = useState<string | null>(
     slider?.image ? getImageUrl(slider.image) : null
+  )
+  const [previewVideo, setPreviewVideo] = useState<string | null>(
+    slider?.videoFile ? getImageUrl(slider.videoFile) : null
+  )
+  const [videoDuration, setVideoDuration] = useState<number | null>(
+    slider?.videoDuration ?? null
   )
 
   const {
@@ -72,6 +82,7 @@ export function SliderForm({ slider }: SliderFormProps) {
           subtitleEn: slider.subtitleEn || '',
           image: slider.image,
           videoUrl: slider.videoUrl || '',
+          videoFile: slider.videoFile || '',
           buttonText: slider.buttonText || '',
           buttonTextEn: slider.buttonTextEn || '',
           buttonUrl: slider.buttonUrl || '',
@@ -127,6 +138,65 @@ export function SliderForm({ slider }: SliderFormProps) {
     setPreviewImage(null)
   }
 
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('video/')) {
+      setError('File harus berupa video (mp4, webm, ogg, mov)')
+      return
+    }
+
+    // Validate file size (max 50MB)
+    if (file.size > 50 * 1024 * 1024) {
+      setError('Ukuran file maksimal 50MB')
+      return
+    }
+
+    setUploadingVideo(true)
+    setError('')
+
+    try {
+      const data = await apiClient.upload('/admin/upload', file, 'sliders', true, true) // isVideo = true
+      const videoUrl = data.url || data.path || ''
+      if (!videoUrl) {
+        throw new Error('Upload gagal: URL tidak ditemukan dalam response')
+      }
+      setValue('videoFile', videoUrl, { shouldValidate: true })
+      setPreviewVideo(getImageUrl(videoUrl))
+      
+      // Save video duration if provided by backend
+      if (data.videoDuration && data.videoDuration > 0) {
+        setVideoDuration(data.videoDuration)
+      } else {
+        // Try to get duration from video element as fallback
+        const video = document.createElement('video')
+        video.preload = 'metadata'
+        video.src = getImageUrl(videoUrl)
+        video.onloadedmetadata = () => {
+          const duration = Math.round(video.duration)
+          if (duration > 0) {
+            setVideoDuration(duration)
+          }
+        }
+      }
+      
+      setError('') // Clear any previous errors
+    } catch (err: any) {
+      console.error('Upload error:', err)
+      setError(err.message || 'Gagal mengupload video')
+    } finally {
+      setUploadingVideo(false)
+    }
+  }
+
+  const handleRemoveVideo = () => {
+    setValue('videoFile', '')
+    setPreviewVideo(null)
+    setVideoDuration(null)
+  }
+
   const onSubmit = async (data: SliderFormData) => {
     setIsLoading(true)
     setError('')
@@ -136,12 +206,16 @@ export function SliderForm({ slider }: SliderFormProps) {
         await apiClient.put(`/admin/sliders/${slider.id}`, {
           ...data,
           videoUrl: data.videoUrl?.trim() || null,
+          videoFile: data.videoFile?.trim() || null,
+          videoDuration: videoDuration || null,
           buttonUrl: data.buttonUrl || null,
         })
       } else {
         await apiClient.post('/admin/sliders/create', {
           ...data,
           videoUrl: data.videoUrl?.trim() || null,
+          videoFile: data.videoFile?.trim() || null,
+          videoDuration: videoDuration || null,
           buttonUrl: data.buttonUrl || null,
         })
       }
@@ -277,6 +351,60 @@ export function SliderForm({ slider }: SliderFormProps) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
+          Video File untuk Autoplay Background (opsional)
+        </label>
+        {previewVideo ? (
+          <div className="relative mb-4">
+            <video
+              src={previewVideo}
+              controls
+              className="w-full max-w-md rounded-lg border border-gray-300"
+            />
+            {videoDuration && (
+              <div className="mt-2 text-sm text-gray-600">
+                Durasi: {Math.floor(videoDuration / 60)}:{(videoDuration % 60).toString().padStart(2, '0')} ({videoDuration} detik)
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={handleRemoveVideo}
+              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        ) : (
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/ogg,video/quicktime"
+              onChange={handleVideoUpload}
+              disabled={uploadingVideo}
+              className="hidden"
+              id="video-upload"
+            />
+            <label
+              htmlFor="video-upload"
+              className="cursor-pointer flex flex-col items-center"
+            >
+              {uploadingVideo ? (
+                <Loader2 className="w-8 h-8 text-primary-600 animate-spin mb-2" />
+              ) : (
+                <Upload className="w-8 h-8 text-gray-400 mb-2" />
+              )}
+              <span className="text-sm text-gray-600">
+                {uploadingVideo ? 'Mengupload video...' : 'Klik untuk upload video (mp4, webm, max 50MB)'}
+              </span>
+            </label>
+          </div>
+        )}
+        <p className="mt-1 text-xs text-gray-500">
+          Video ini akan ditampilkan sebagai background autoplay di slider. Jika tidak diisi, akan menggunakan gambar.
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
           Video YouTube URL (opsional)
         </label>
         <input
@@ -286,7 +414,7 @@ export function SliderForm({ slider }: SliderFormProps) {
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         />
         <p className="mt-1 text-xs text-gray-500">
-          Jika diisi, hero slider akan menampilkan tombol play untuk video ini.
+          Jika diisi, hero slider akan menampilkan tombol play untuk video YouTube ini (untuk modal popup).
         </p>
         {errors.videoUrl && (
           <p className="mt-1 text-sm text-red-600">{errors.videoUrl.message}</p>

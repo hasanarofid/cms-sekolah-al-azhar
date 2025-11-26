@@ -57,7 +57,7 @@ export function Navigation({ menus, locale = 'id', logo, websiteName, showWebsit
               )}
               {showWebsiteName && (
                 <Link to="/" className="text-2xl md:text-3xl font-bold text-white hover:text-white/90 transition-colors drop-shadow-lg">
-                  {websiteName || 'Al Azhar IIBS'}
+                  {websiteName || ''}
                 </Link>
               )}
             </div>

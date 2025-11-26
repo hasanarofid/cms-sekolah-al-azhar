@@ -104,10 +104,13 @@ export const apiClient = {
     return { success: true };
   },
 
-  async upload(endpoint: string, file: File, type: string = 'general', includeAuth = true) {
+  async upload(endpoint: string, file: File, type: string = 'general', includeAuth = true, isVideo: boolean = false) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type); // Add type parameter like Next.js
+    if (isVideo) {
+      formData.append('isVideo', 'true'); // Indicate this is a video upload
+    }
 
     const headers: HeadersInit = {};
     if (includeAuth) {

@@ -185,6 +185,7 @@ CREATE TABLE `Slider` (
   `subtitleEn` VARCHAR(191) NULL,
   `image` VARCHAR(191) NOT NULL,
   `videoUrl` VARCHAR(191) NULL,
+  `videoFile` VARCHAR(191) NULL,
   `buttonText` VARCHAR(191) NULL,
   `buttonTextEn` VARCHAR(191) NULL,
   `buttonUrl` VARCHAR(191) NULL,

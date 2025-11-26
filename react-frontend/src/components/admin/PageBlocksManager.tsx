@@ -48,22 +48,29 @@ export function PageBlocksManager({ pageId, initialBlocks = [] }: PageBlocksMana
 
   const fetchBlocks = async () => {
     try {
+      console.log('Fetching blocks for pageId:', pageId)
       const data = await apiClient.get(`/admin/pages/${pageId}/blocks`)
       const blocksArray = Array.isArray(data) ? data : []
       
-      // Validate each block has an ID
+      // Validate each block has an ID and is not the same as pageId
       const validBlocks = blocksArray.filter(block => {
         if (!block.id) {
           console.error('Block without ID found:', block)
+          return false
+        }
+        if (block.id === pageId) {
+          console.error('Block ID sama dengan Page ID (invalid):', block.id)
           return false
         }
         return true
       })
       
       console.log('Fetched blocks:', { 
+        pageId,
         total: blocksArray.length, 
         valid: validBlocks.length,
-        blockIds: validBlocks.map(b => b.id)
+        blockIds: validBlocks.map(b => b.id),
+        invalidBlocks: blocksArray.filter(b => !b.id || b.id === pageId).map(b => ({ id: b.id, type: b.type }))
       })
       
       setBlocks(validBlocks)
@@ -165,12 +172,19 @@ export function PageBlocksManager({ pageId, initialBlocks = [] }: PageBlocksMana
       // Ensure we have the block ID from response
       if (response && response.id) {
         console.log('New block ID:', response.id, 'Length:', response.id.length)
-        // Validate ID is complete
+        // Validate ID is complete and not the same as pageId
         if (response.id.length < 20) {
           console.warn('Warning: Block ID seems too short:', response.id)
         }
+        if (response.id === pageId) {
+          console.error('ERROR: Created block ID sama dengan Page ID!', { blockId: response.id, pageId })
+          setError('Error: Block ID yang dibuat sama dengan Page ID. Silakan refresh halaman.')
+          return
+        }
       } else {
         console.error('Block created but no ID in response:', response)
+        setError('Error: Block dibuat tapi tidak ada ID dalam response. Silakan refresh halaman.')
+        return
       }
 
       // Refresh blocks to get the latest data
@@ -415,6 +429,14 @@ export function PageBlocksManager({ pageId, initialBlocks = [] }: PageBlocksMana
                             alert('Block ID tidak valid. Silakan refresh halaman.')
                             return
                           }
+                          // Validate block.id is not the same as pageId
+                          if (block.id === pageId) {
+                            console.error('ERROR: Block ID sama dengan Page ID!', { blockId: block.id, pageId })
+                            alert('Error: Block ID tidak valid (sama dengan Page ID). Silakan refresh halaman dan coba lagi.')
+                            // Try to refresh blocks
+                            fetchBlocks()
+                            return
+                          }
                           setEditingBlock(block)
                         }}
                         className="p-2 text-blue-600 hover:text-blue-700"
@@ -541,8 +563,17 @@ function BlockEditor({ pageId, block, onClose, onSave }: {
       // Log the full URL we're trying to access
       const updateUrl = `/admin/pages/${pageId}/blocks/${block.id}`
       console.log('Update URL:', updateUrl)
-      console.log('Block ID length:', block.id.length)
+      console.log('Page ID:', pageId, 'Length:', pageId.length)
+      console.log('Block ID:', block.id, 'Length:', block.id.length)
       console.log('Block ID characters:', block.id.split('').join(' '))
+      
+      // Validate block ID is not the same as page ID (common mistake)
+      if (block.id === pageId) {
+        const errorMsg = 'Error: Block ID sama dengan Page ID. Ini tidak valid. Silakan refresh halaman dan coba lagi.'
+        setSaveError(errorMsg)
+        alert(errorMsg)
+        return
+      }
       
       // Convert blockData back to JSON string for backend
       const response = await apiClient.put(`/admin/pages/${pageId}/blocks/${block.id}`, {
@@ -601,6 +632,48 @@ function BlockEditor({ pageId, block, onClose, onSave }: {
       }
     } catch (error) {
       console.error('Error uploading image:', error)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>, sliderIndex?: number) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('video/')) {
+      alert('File harus berupa video (mp4, webm, ogg, mov)')
+      return
+    }
+
+    // Validate file size (max 50MB)
+    if (file.size > 50 * 1024 * 1024) {
+      alert('Ukuran file maksimal 50MB')
+      return
+    }
+
+    setUploading(true)
+    try {
+      const data = await apiClient.upload('/admin/upload', file, 'sliders', true, true) // isVideo = true
+      const videoUrl = data.url || data.path || ''
+      if (!videoUrl) {
+        throw new Error('Upload gagal: URL tidak ditemukan dalam response')
+      }
+      
+      if (block.type === 'hero-slider' && sliderIndex !== undefined) {
+        const sliders = [...(blockData.sliders || [])]
+        if (sliders[sliderIndex]) {
+          sliders[sliderIndex] = {
+            ...sliders[sliderIndex],
+            videoFile: videoUrl
+          }
+          setBlockData({ ...blockData, sliders })
+        }
+      }
+    } catch (error: any) {
+      console.error('Error uploading video:', error)
+      alert(error.message || 'Gagal mengupload video')
     } finally {
       setUploading(false)
     }
@@ -905,7 +978,7 @@ function BlockEditor({ pageId, block, onClose, onSave }: {
                         />
                       </div>
 
-                      {/* Video URL */}
+                      {/* Video YouTube URL */}
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Video YouTube URL (opsional)
@@ -923,6 +996,56 @@ function BlockEditor({ pageId, block, onClose, onSave }: {
                         />
                         <p className="text-xs text-gray-500 mt-1">
                           Jika diisi, slider menampilkan tombol play yang membuka video.
+                        </p>
+                      </div>
+
+                      {/* Video File Upload untuk Autoplay Background */}
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Video File untuk Autoplay Background (opsional)
+                        </label>
+                        {slider.videoFile ? (
+                          <div className="relative mb-4">
+                            <video
+                              src={getImageUrl(slider.videoFile)}
+                              controls
+                              className="w-full h-48 object-cover rounded-lg border border-gray-300"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newSliders = [...sliders]
+                                newSliders[index] = { ...newSliders[index], videoFile: '' }
+                                setBlockData({ ...blockData, sliders: newSliders })
+                              }}
+                              className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full hover:bg-red-700"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                            <input
+                              type="file"
+                              accept="video/*"
+                              onChange={(e) => handleVideoUpload(e, index)}
+                              disabled={uploading}
+                              className="hidden"
+                              id={`slider-video-${index}`}
+                            />
+                            <label
+                              htmlFor={`slider-video-${index}`}
+                              className="cursor-pointer flex flex-col items-center"
+                            >
+                              <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                              <span className="text-sm text-gray-600">
+                                {uploading ? 'Mengupload...' : 'Klik untuk upload video (mp4, webm, max 50MB)'}
+                              </span>
+                            </label>
+                          </div>
+                        )}
+                        <p className="text-xs text-gray-500 mt-1">
+                          Video akan autoplay sebagai background (seperti website referensi). Video akan otomatis muted dan loop.
                         </p>
                       </div>
                     </div>

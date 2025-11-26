@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { login, isAuthenticated } from '../lib/auth'
+import { login, isAuthenticated, getSession } from '../lib/auth'
 
 const loginSchema = z.object({
   email: z.string().email('Email tidak valid'),
@@ -18,12 +18,31 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  // Redirect if already logged in
+  // Redirect if already logged in (with session verification)
+  const hasCheckedSession = useRef(false)
+  
   useEffect(() => {
-    if (isAuthenticated()) {
-      const callbackUrl = searchParams.get('callbackUrl') || '/admin'
-      navigate(callbackUrl)
+    // Prevent multiple checks
+    if (hasCheckedSession.current) return
+    hasCheckedSession.current = true
+        
+    async function checkSession() {
+      if (isAuthenticated()) {
+        try {
+          const sessionUser = await getSession()
+          if (sessionUser) {
+            const callbackUrl = searchParams.get('callbackUrl') || '/admin'
+            navigate(callbackUrl, { replace: true })
+          }
+          // If session check fails, stay on login page (don't redirect)
+        } catch (error) {
+          console.error('Session check error:', error)
+          // Don't redirect if session check fails - user needs to login again
+        }
+      }
     }
+    
+    checkSession()
   }, [navigate, searchParams])
 
   const {

@@ -47,7 +47,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       figuresBackground: settings.figures_section_background?.value || '',
       websiteLogo: settings.website_logo?.value || '',
       websiteFavicon: settings.website_favicon?.value || '',
-      websiteTitle: settings.website_title?.value || 'Al Azhar IIBS',
+      websiteTitle: settings.website_title?.value || '',
       showWebsiteName: settings.show_website_name?.value === 'true' || false,
       whatsappPhone: settings.whatsapp_phone?.value || '',
       whatsappMessage: settings.whatsapp_message?.value || 'Assalamualaikum Al Azhar IIBS\nMohon info lebih lanjut untuk pendaftaran murid baru\nTerima Kasih',

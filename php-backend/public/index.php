@@ -168,10 +168,10 @@ $routes = [
     'api/admin/pages/([a-zA-Z0-9]+)' => 'PageController@show',
     'api/admin/pages/([a-zA-Z0-9]+)/update' => 'PageController@update',
     'api/admin/pages/([a-zA-Z0-9]+)/delete' => 'PageController@delete',
-    'api/admin/pages/([a-zA-Z0-9]+)/blocks' => 'PageBlockController@index',
-    'api/admin/pages/([a-zA-Z0-9]+)/blocks/create' => 'PageBlockController@create',
-    // More flexible route for block IDs (must come before specific route)
-    'api/admin/pages/([^/]+)/blocks/([^/]+)' => 'PageBlockController@show', // GET untuk show, PUT untuk update, DELETE untuk delete - flexible ID matching
+    'api/admin/pages/([a-zA-Z0-9_-]+)/blocks' => 'PageBlockController@index',
+    'api/admin/pages/([a-zA-Z0-9_-]+)/blocks/create' => 'PageBlockController@create',
+    // More flexible route for block IDs (must come before specific route) - support alphanumeric, dash, underscore
+    'api/admin/pages/([a-zA-Z0-9_-]+)/blocks/([a-zA-Z0-9_-]+)' => 'PageBlockController@show', // GET untuk show, PUT untuk update, DELETE untuk delete - flexible ID matching
     
     // Admin - Page Blocks (alternative route)
     'api/admin/page-blocks' => 'PageBlockController@all',
@@ -210,8 +210,8 @@ $routes = [
     // Admin - Home Sections
     'api/admin/home-sections' => 'HomeSectionController@index',
     'api/admin/home-sections/create' => 'HomeSectionController@create',
-    'api/admin/home-sections/([a-zA-Z0-9]+)' => 'HomeSectionController@show',
-    'api/admin/home-sections/([a-zA-Z0-9]+)/update' => 'HomeSectionController@update',
+    'api/admin/home-sections/([a-zA-Z0-9_-]+)' => 'HomeSectionController@show', // GET untuk show, PUT untuk update, DELETE untuk delete
+    'api/admin/home-sections/([a-zA-Z0-9_-]+)/update' => 'HomeSectionController@update',
     'api/admin/home-sections/([a-zA-Z0-9]+)/delete' => 'HomeSectionController@delete',
     
     // Admin - Partnerships
@@ -265,40 +265,55 @@ foreach ($routes as $pattern => $handler) {
     if (class_exists($controllerClass)) {
         $controller = new $controllerClass();
         
-        // RESTful routing: Check HTTP method untuk resource routes dengan ID
-        // Jika route adalah show tapi HTTP method adalah PUT/DELETE, gunakan method yang sesuai
-        if (count($matches) > 0 && $method === 'show') {
-            $httpMethod = strtoupper($_SERVER['REQUEST_METHOD']);
-            if ($httpMethod === 'POST' && isset($_POST['_method'])) {
-                $httpMethod = strtoupper($_POST['_method']);
-            }
-            
-            // Override method berdasarkan HTTP method untuk RESTful API
-            if ($httpMethod === 'PUT' && method_exists($controller, 'update')) {
-                $method = 'update';
-            } elseif ($httpMethod === 'DELETE' && method_exists($controller, 'delete')) {
-                $method = 'delete';
-            }
-        }
-        
         // Special handling untuk PageBlockController dengan 2 parameters (pageId, blockId)
-        if ($controllerName === 'PageBlockController' && count($matches) === 2 && $method === 'show') {
+        // HARUS dilakukan SEBELUM generic RESTful routing
+        if ($controllerName === 'PageBlockController' && count($matches) === 2) {
             $httpMethod = strtoupper($_SERVER['REQUEST_METHOD']);
             if ($httpMethod === 'POST' && isset($_POST['_method'])) {
                 $httpMethod = strtoupper($_POST['_method']);
             }
             
+            // Validate that we have both pageId and blockId
+            $pageId = $matches[0];
+            $blockId = $matches[1];
+            
+            error_log("PageBlockController routing - pageId: " . $pageId . ", blockId: " . $blockId . ", method: " . $httpMethod . ", original method: " . $method);
+            
+            // Validate blockId is not the same as pageId
+            if ($blockId === $pageId) {
+                error_log("PageBlockController routing - ERROR: blockId sama dengan pageId! pageId: " . $pageId . ", blockId: " . $blockId);
+                Response::error('Invalid request: Block ID sama dengan Page ID. Block ID: ' . $blockId . ', Page ID: ' . $pageId, 400);
+                exit;
+            }
+            
             if ($httpMethod === 'PUT' && method_exists($controller, 'update')) {
                 $method = 'update';
-                // Pass only blockId untuk update/delete
-                $matches = [$matches[1]]; // blockId is second parameter (index 1)
+                // Pass only blockId untuk update
+                $matches = [$blockId];
+                error_log("PageBlockController routing - Calling update with blockId: " . $blockId);
             } elseif ($httpMethod === 'DELETE' && method_exists($controller, 'delete')) {
                 $method = 'delete';
                 // Pass only blockId untuk delete
-                $matches = [$matches[1]]; // blockId is second parameter (index 1)
-            } elseif ($httpMethod === 'GET') {
+                $matches = [$blockId];
+            } elseif ($httpMethod === 'GET' && $method === 'show') {
                 // For GET, show method only needs blockId
-                $matches = [$matches[1]]; // blockId is second parameter (index 1)
+                $matches = [$blockId];
+            }
+        } else {
+            // RESTful routing: Check HTTP method untuk resource routes dengan ID
+            // Jika route adalah show tapi HTTP method adalah PUT/DELETE, gunakan method yang sesuai
+            if (count($matches) > 0 && $method === 'show') {
+                $httpMethod = strtoupper($_SERVER['REQUEST_METHOD']);
+                if ($httpMethod === 'POST' && isset($_POST['_method'])) {
+                    $httpMethod = strtoupper($_POST['_method']);
+                }
+                
+                // Override method berdasarkan HTTP method untuk RESTful API
+                if ($httpMethod === 'PUT' && method_exists($controller, 'update')) {
+                    $method = 'update';
+                } elseif ($httpMethod === 'DELETE' && method_exists($controller, 'delete')) {
+                    $method = 'delete';
+                }
             }
         }
         

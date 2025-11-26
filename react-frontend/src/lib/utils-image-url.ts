@@ -89,7 +89,10 @@ export function getImageUrl(imagePath: string | null | undefined): string {
   if (imagePath.startsWith('/')) {
     const baseUrl = getBaseUrl();
     if (baseUrl) {
-      const fullUrl = `${baseUrl}${imagePath}`;
+      // Remove trailing slash from baseUrl and leading slash from imagePath to avoid double slashes
+      const cleanBaseUrl = baseUrl.replace(/\/+$/, '');
+      const cleanImagePath = imagePath.replace(/^\/+/, '/');
+      const fullUrl = `${cleanBaseUrl}${cleanImagePath}`;
       // Debug logging untuk development
       if (import.meta.env.DEV) {
         console.log('[getImageUrl] Converting:', {

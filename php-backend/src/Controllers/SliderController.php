@@ -46,10 +46,30 @@ class SliderController extends BaseController
         $data = $this->getJsonInput();
         $id = Utils::generateId();
 
+        // Get video duration if videoFile is provided
+        $videoDuration = null;
+        if (!empty($data['videoFile'])) {
+            $videoPath = __DIR__ . '/../../public' . $data['videoFile'];
+            if (file_exists($videoPath)) {
+                try {
+                    $duration = Utils::getVideoDuration($videoPath);
+                    if ($duration !== null && $duration > 0) {
+                        $videoDuration = $duration;
+                    }
+                } catch (\Exception $e) {
+                    error_log('Failed to get video duration: ' . $e->getMessage());
+                }
+            }
+        }
+        // If duration is provided in data, use it (from upload response)
+        if (isset($data['videoDuration']) && $data['videoDuration'] > 0) {
+            $videoDuration = (int) $data['videoDuration'];
+        }
+
         $this->db->query(
-            'INSERT INTO Slider (id, title, titleEn, subtitle, subtitleEn, image, videoUrl, buttonText, 
+            'INSERT INTO Slider (id, title, titleEn, subtitle, subtitleEn, image, videoUrl, videoFile, videoDuration, buttonText, 
              buttonTextEn, buttonUrl, `order`, isActive) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $id,
                 $data['title'] ?? '',
@@ -58,6 +78,8 @@ class SliderController extends BaseController
                 $data['subtitleEn'] ?? null,
                 $data['image'] ?? '',
                 $data['videoUrl'] ?? null,
+                $data['videoFile'] ?? null,
+                $videoDuration,
                 $data['buttonText'] ?? null,
                 $data['buttonTextEn'] ?? null,
                 $data['buttonUrl'] ?? null,
@@ -96,6 +118,34 @@ class SliderController extends BaseController
 
         $data = $this->getJsonInput();
 
+        // Get video duration if videoFile is changed
+        $videoDuration = $existing['videoDuration'] ?? null;
+        if (isset($data['videoFile']) && $data['videoFile'] !== $existing['videoFile']) {
+            if (!empty($data['videoFile'])) {
+                $videoPath = __DIR__ . '/../../public' . $data['videoFile'];
+                if (file_exists($videoPath)) {
+                    try {
+                        $duration = Utils::getVideoDuration($videoPath);
+                        if ($duration !== null && $duration > 0) {
+                            $videoDuration = $duration;
+                        }
+                    } catch (\Exception $e) {
+                        error_log('Failed to get video duration: ' . $e->getMessage());
+                    }
+                }
+            } else {
+                $videoDuration = null;
+            }
+        }
+        // If duration is explicitly provided in data, use it (from upload response)
+        if (isset($data['videoDuration'])) {
+            if ($data['videoDuration'] > 0) {
+                $videoDuration = (int) $data['videoDuration'];
+            } else {
+                $videoDuration = null;
+            }
+        }
+
         // Prepare update data - use provided values or keep existing
         $updateData = [
             'title' => $data['title'] ?? $existing['title'],
@@ -104,6 +154,8 @@ class SliderController extends BaseController
             'subtitleEn' => isset($data['subtitleEn']) ? ($data['subtitleEn'] ?: null) : $existing['subtitleEn'],
             'image' => $data['image'] ?? $existing['image'],
             'videoUrl' => isset($data['videoUrl']) ? ($data['videoUrl'] ?: null) : $existing['videoUrl'],
+            'videoFile' => isset($data['videoFile']) ? ($data['videoFile'] ?: null) : $existing['videoFile'],
+            'videoDuration' => $videoDuration,
             'buttonText' => isset($data['buttonText']) ? ($data['buttonText'] ?: null) : $existing['buttonText'],
             'buttonTextEn' => isset($data['buttonTextEn']) ? ($data['buttonTextEn'] ?: null) : $existing['buttonTextEn'],
             'buttonUrl' => isset($data['buttonUrl']) ? ($data['buttonUrl'] ?: null) : $existing['buttonUrl'],
@@ -112,7 +164,7 @@ class SliderController extends BaseController
         ];
 
         $this->db->query(
-            'UPDATE Slider SET title = ?, titleEn = ?, subtitle = ?, subtitleEn = ?, image = ?, videoUrl = ?, 
+            'UPDATE Slider SET title = ?, titleEn = ?, subtitle = ?, subtitleEn = ?, image = ?, videoUrl = ?, videoFile = ?, videoDuration = ?,
              buttonText = ?, buttonTextEn = ?, buttonUrl = ?, `order` = ?, isActive = ? WHERE id = ?',
             [
                 $updateData['title'],
@@ -121,6 +173,8 @@ class SliderController extends BaseController
                 $updateData['subtitleEn'],
                 $updateData['image'],
                 $updateData['videoUrl'],
+                $updateData['videoFile'],
+                $updateData['videoDuration'],
                 $updateData['buttonText'],
                 $updateData['buttonTextEn'],
                 $updateData['buttonUrl'],

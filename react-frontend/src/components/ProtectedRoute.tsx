@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { isAuthenticated, getSession } from '../lib/auth'
 
@@ -10,20 +10,33 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const location = useLocation()
   const [isChecking, setIsChecking] = useState(true)
   const [isAuth, setIsAuth] = useState(false)
+  const hasChecked = useRef(false)
+
   useEffect(() => {
+    // Prevent multiple checks
+    if (hasChecked.current) return
+    hasChecked.current = true
+
     async function checkAuth() {
-      if (isAuthenticated()) {
-        // Verify token dengan server
-        const sessionUser = await getSession()
-        if (sessionUser) {
-          setIsAuth(true)
+      try {
+        if (isAuthenticated()) {
+          // Verify token dengan server
+          const sessionUser = await getSession()
+          if (sessionUser) {
+            setIsAuth(true)
+          } else {
+            // Clear invalid token
+            setIsAuth(false)
+          }
         } else {
           setIsAuth(false)
         }
-      } else {
+      } catch (error) {
+        console.error('Auth check error:', error)
         setIsAuth(false)
+      } finally {
+        setIsChecking(false)
       }
-      setIsChecking(false)
     }
 
     checkAuth()
@@ -41,8 +54,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!isAuth) {
-    // Redirect ke login dengan callback URL
-    return <Navigate to={`/login?callbackUrl=${encodeURIComponent(location.pathname)}`} replace />
+    // Prevent redirect loop - only redirect if not already on login page
+    if (location.pathname !== '/login') {
+      return <Navigate to={`/login?callbackUrl=${encodeURIComponent(location.pathname)}`} replace />
+    }
+    return null
   }
 
   return <>{children}</>

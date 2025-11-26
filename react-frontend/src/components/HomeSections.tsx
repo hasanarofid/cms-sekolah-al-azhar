@@ -1,7 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Play } from 'lucide-react'
+import { Play, X } from 'lucide-react'
 import { SplitScreenSection } from './SplitScreenSection'
 import { parseImages } from '../lib/utils-images'
 import { getImageUrl, getImageUrls } from '../lib/utils-image-url'
@@ -29,6 +30,8 @@ interface HomeSectionsProps {
 }
 
 export function HomeSections({ sections, locale = 'id' }: HomeSectionsProps) {
+  const [activeVideo, setActiveVideo] = useState<{ sectionId: string; videoId: string } | null>(null)
+  
   const mottoSections = sections.filter(s => s.type === 'motto')
   const videoProfiles = sections.filter(s => s.type === 'video-profile')
   const admissionSections = sections.filter(s => s.type === 'admission')
@@ -38,6 +41,43 @@ export function HomeSections({ sections, locale = 'id' }: HomeSectionsProps) {
 
   const isExternalUrl = (url: string | null | undefined) => 
     url && (url.startsWith('http://') || url.startsWith('https://'))
+
+  // Extract YouTube video ID from URL
+  const extractYouTubeId = (url?: string | null) => {
+    if (!url) return null
+    const trimmed = url.trim()
+    // Support various YouTube URL formats
+    const youtubeRegex = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/
+    const match = trimmed.match(youtubeRegex)
+    if (match && match[1]) {
+      return match[1]
+    }
+    try {
+      const urlObj = new URL(trimmed)
+      if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
+        const id = urlObj.searchParams.get('v') || urlObj.pathname.split('/').pop()
+        return id && id.length >= 11 ? id : null
+      }
+    } catch {
+      // Invalid URL - ignore
+    }
+    return null
+  }
+
+  const handlePlayVideo = (section: HomeSection) => {
+    if (!section.videoUrl) return
+    const videoId = extractYouTubeId(section.videoUrl)
+    if (!videoId) {
+      // If not YouTube, open in new tab
+      window.open(section.videoUrl, '_blank', 'noopener,noreferrer')
+      return
+    }
+    setActiveVideo({ sectionId: section.id, videoId })
+  }
+
+  const closeVideoModal = () => {
+    setActiveVideo(null)
+  }
 
   return (
     <>
@@ -74,12 +114,7 @@ export function HomeSections({ sections, locale = 'id' }: HomeSectionsProps) {
                         {section.videoUrl && (
                           <div className="absolute inset-0 flex items-center justify-center group-hover:bg-black/20 transition-colors">
                             <button
-                              onClick={() => {
-                                // Open video in modal or new tab
-                                if (section.videoUrl) {
-                                  window.open(section.videoUrl, '_blank')
-                                }
-                              }}
+                              onClick={() => handlePlayVideo(section)}
                               className="bg-white/95 hover:bg-white rounded-full p-5 transition-all hover:scale-110 shadow-xl"
                             >
                               <Play className="text-gray-900 ml-1" size={40} fill="currentColor" />
@@ -259,6 +294,36 @@ export function HomeSections({ sections, locale = 'id' }: HomeSectionsProps) {
             </div>
           </div>
         </section>
+      )}
+
+      {/* YouTube Video Modal */}
+      {activeVideo && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={closeVideoModal}
+        >
+          <div 
+            className="relative w-full max-w-4xl mx-4 bg-black rounded-lg overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={closeVideoModal}
+              className="absolute top-4 right-4 z-10 bg-white/90 hover:bg-white rounded-full p-2 transition-colors"
+              aria-label="Close video"
+            >
+              <X size={24} className="text-gray-900" />
+            </button>
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}> {/* 16:9 aspect ratio */}
+              <iframe
+                src={`https://www.youtube.com/embed/${activeVideo.videoId}?autoplay=1&rel=0`}
+                title="YouTube video player"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="absolute top-0 left-0 w-full h-full"
+              />
+            </div>
+          </div>
+        </div>
       )}
     </>
   )
