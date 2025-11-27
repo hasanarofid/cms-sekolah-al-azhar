@@ -57,6 +57,9 @@ export default function PostsPage() {
                     Judul
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Kategori
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Penulis
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -73,15 +76,35 @@ export default function PostsPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {posts.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                       Tidak ada post ditemukan
                     </td>
                   </tr>
                 ) : (
                   posts.map((post) => (
                     <tr key={post.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">{post.title}</div>
+                        {post.tags && Array.isArray(post.tags) && post.tags.length > 0 && (
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {post.tags.slice(0, 3).map((tag: string, idx: number) => (
+                              <span
+                                key={idx}
+                                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                            {post.tags.length > 3 && (
+                              <span className="text-xs text-gray-500">+{post.tags.length - 3}</span>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {post.category || '-'}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">{post.authorName || 'Admin'}</div>

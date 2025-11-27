@@ -122,7 +122,9 @@ export default function PagesPage() {
                         <div className="text-sm font-medium text-gray-900">{page.title}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">/{page.slug}</div>
+                        <div className="text-sm text-gray-500">
+                          {page.slug === '/' || page.slug === 'beranda' ? '/' : `/${page.slug}`}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
@@ -141,16 +143,35 @@ export default function PagesPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end space-x-2">
                           <a
-                            href={`/${page.slug}`}
+                            href={page.slug === '/' || page.slug === 'beranda' ? '/' : `/${page.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-900"
+                            title="Lihat Halaman"
                           >
                             <Eye size={18} />
                           </a>
+                          {/* Hide Hero action for beranda/home page */}
+                          {(page.slug !== '/' && page.slug !== 'beranda') && (
+                            <Link
+                              to={`/admin/pages/${page.id}/hero`}
+                              className="text-green-600 hover:text-green-900"
+                              title="Kelola Hero"
+                            >
+                              <span className="text-xs">Hero</span>
+                            </Link>
+                          )}
+                          <Link
+                            to={`/admin/pages/${page.id}/sections`}
+                            className="text-purple-600 hover:text-purple-900"
+                            title="Kelola Sections"
+                          >
+                            <span className="text-xs">Section</span>
+                          </Link>
                           <Link
                             to={`/admin/pages/${page.id}`}
                             className="text-primary-600 hover:text-primary-900"
+                            title="Edit Halaman"
                           >
                             <Edit size={18} />
                           </Link>

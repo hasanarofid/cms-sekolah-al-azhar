@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { getImageUrl } from '../lib/utils-image-url'
 
@@ -10,46 +10,99 @@ interface FAQ {
   questionEn?: string | null
   answer: string
   answerEn?: string | null
-  image?: string | null
-  sectionTitle?: string | null
-  sectionTitleEn?: string | null
 }
 
-interface FAQSectionProps {
-  faqs: FAQ[]
+interface FAQItem {
+  id: string
+  question: string
+  questionEn?: string
+  answer: string
+  answerEn?: string
+  order: number
+}
+
+interface HomeFAQSectionProps {
+  section: {
+    id: string
+    title?: string | null
+    titleEn?: string | null
+    image?: string | null
+    faqItems?: FAQItem[] | string | null
+  }
   locale?: 'id' | 'en'
 }
 
-export function FAQSection({ faqs, locale = 'id' }: FAQSectionProps) {
+export function HomeFAQSection({ section, locale = 'id' }: HomeFAQSectionProps) {
+  const [faqs, setFaqs] = useState<FAQ[]>([])
   const [openIndex, setOpenIndex] = useState<number | null>(0) // First item open by default
+  const [loading] = useState(false)
+
+  useEffect(() => {
+    // Parse faqItems from section
+    let faqItems: FAQItem[] = []
+    
+    if (section.faqItems) {
+      if (Array.isArray(section.faqItems)) {
+        faqItems = section.faqItems
+      } else if (typeof section.faqItems === 'string') {
+        try {
+          const parsed = JSON.parse(section.faqItems)
+          faqItems = Array.isArray(parsed) ? parsed : []
+        } catch (e) {
+          console.error('Error parsing faqItems:', e)
+          faqItems = []
+        }
+      }
+    }
+    
+    // Convert FAQItems to FAQ format
+    const formattedFaqs: FAQ[] = faqItems
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      .map(item => ({
+        id: item.id,
+        question: item.question || '',
+        questionEn: item.questionEn || null,
+        answer: item.answer || '',
+        answerEn: item.answerEn || null,
+      }))
+    
+    setFaqs(formattedFaqs)
+  }, [section.faqItems])
 
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index)
   }
 
+  if (loading) {
+    return (
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   if (faqs.length === 0) return null
 
-  // Get section title and image from first FAQ that has them, or use defaults
-  const sectionData = faqs.find(f => f.sectionTitle || f.image) || faqs[0]
-  const sectionTitle = locale === 'en' && sectionData.sectionTitleEn 
-    ? sectionData.sectionTitleEn 
-    : sectionData.sectionTitle || ''
-  const sectionImage = sectionData.image
+  const sectionTitle = locale === 'en' && section.titleEn ? section.titleEn : section.title
 
   return (
     <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Title / Motto */}
         {sectionTitle && (
-           <div className="text-center mb-12">
-           <h2 className="text-4xl font-bold mb-4 text-gray-900">
-           {sectionTitle}
-           </h2>
-         </div>
+            <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4 text-gray-900">
+              {sectionTitle}
+            </h2>
+          </div>
         )}
 
         {/* FAQ Title */}
-       
+      
         
         {/* Two Column Layout: FAQ Left, Image Right */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
@@ -97,15 +150,15 @@ export function FAQSection({ faqs, locale = 'id' }: FAQSectionProps) {
           </div>
 
           {/* Right: Image */}
-          {sectionImage && (
+          {section.image && (
             <div className="sticky top-8">
               <div className="relative h-full min-h-[500px] lg:min-h-[600px]">
                 <img
-                  src={getImageUrl(sectionImage)}
+                  src={getImageUrl(section.image)}
                   alt="FAQ Section Image"
                   className="w-full h-full object-cover rounded-lg shadow-lg"
                   onError={(e) => {
-                    console.error('Failed to load image:', sectionImage)
+                    console.error('Failed to load image:', section.image)
                     e.currentTarget.src = '/placeholder-image.png'
                   }}
                 />

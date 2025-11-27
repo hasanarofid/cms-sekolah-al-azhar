@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Play, X } from 'lucide-react'
 import { SplitScreenSection } from './SplitScreenSection'
+import { HomeFAQSection } from './HomeFAQSection'
 import { parseImages } from '../lib/utils-images'
 import { getImageUrl, getImageUrls } from '../lib/utils-image-url'
 
@@ -18,10 +19,14 @@ interface HomeSection {
   contentEn?: string | null
   image?: string | null
   images?: string | string[] | null // Bisa berupa JSON string, array, atau null
+  imageLeft?: string | null
+  imageRight?: string | null
   videoUrl?: string | null
   buttonText?: string | null
   buttonTextEn?: string | null
   buttonUrl?: string | null
+  faqItems?: any[] | string | null
+  figures?: any[] | string | null
 }
 
 interface HomeSectionsProps {
@@ -37,6 +42,7 @@ export function HomeSections({ sections, locale = 'id' }: HomeSectionsProps) {
   const admissionSections = sections.filter(s => s.type === 'admission')
   const featureSections = sections.filter(s => s.type === 'feature')
   const splitSections = sections.filter(s => s.type === 'split-screen')
+  const faqSections = sections.filter(s => s.type === 'faq')
   // Masjid sections are rendered separately after FAQ in homepage
 
   const isExternalUrl = (url: string | null | undefined) => 
@@ -81,29 +87,16 @@ export function HomeSections({ sections, locale = 'id' }: HomeSectionsProps) {
 
   return (
     <>
-      {/* Motto Section */}
-      {mottoSections.length > 0 && mottoSections.map((section) => (
-        <section key={section.id} className="py-16 bg-white">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <h2 className="text-4xl md:text-5xl font-bold italic text-gray-900">
-                "{locale === 'en' && section.titleEn ? section.titleEn : section.title}"
-              </h2>
-            </div>
-          </div>
-        </section>
-      ))}
-
       {/* Video Profiles Section */}
       {videoProfiles.length > 0 && (
-        <section className="py-16 bg-white">
+        <section className="py-8 md:py-10 lg:py-12 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               {videoProfiles.map((section) => {
                 return (
                   <div key={section.id} className="bg-white rounded-xl shadow-lg overflow-hidden">
                     {section.image && (
-                      <div className="relative h-80 bg-gray-200 group cursor-pointer">
+                      <div className="relative h-64 md:h-80 bg-gray-200 group cursor-pointer rounded-xl overflow-hidden">
                         <img
                           src={getImageUrl(section.image)}
                           alt={locale === 'en' && section.titleEn ? section.titleEn : section.title || ''}
@@ -115,22 +108,22 @@ export function HomeSections({ sections, locale = 'id' }: HomeSectionsProps) {
                           <div className="absolute inset-0 flex items-center justify-center group-hover:bg-black/20 transition-colors">
                             <button
                               onClick={() => handlePlayVideo(section)}
-                              className="bg-white/95 hover:bg-white rounded-full p-5 transition-all hover:scale-110 shadow-xl"
+                              className="bg-white/95 hover:bg-white rounded-full p-4 md:p-5 transition-all hover:scale-110 shadow-xl"
                             >
-                              <Play className="text-gray-900 ml-1" size={40} fill="currentColor" />
+                              <Play className="text-gray-900 ml-1" size={36} fill="currentColor" />
                             </button>
                           </div>
                         )}
                         {/* Title overlay on image like reference */}
-                        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
-                          <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
+                        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-black/70 to-transparent">
+                          <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-white mb-1 md:mb-2">
                             {locale === 'en' && section.titleEn ? section.titleEn : section.title}
                           </h3>
                         </div>
                       </div>
                     )}
                     {section.content && (
-                      <div className="p-6">
+                      <div className="p-4 md:p-6">
                         <p className="text-gray-600 text-sm leading-relaxed">
                           {locale === 'en' && section.contentEn ? section.contentEn : section.content}
                         </p>
@@ -256,6 +249,40 @@ export function HomeSections({ sections, locale = 'id' }: HomeSectionsProps) {
 
       {/* Split Screen Sections (Yellow background left, Image right) - Replaces legacy Features */}
       <SplitScreenSection sections={splitSections} locale={locale} />
+
+      {/* Motto Section - Second motto (after split-screen) */}
+      {/* First motto is rendered separately as QuoteSection in HomePage */}
+      {mottoSections.length > 1 && mottoSections.slice(1).map((section) => (
+        <section key={section.id} className="py-8 md:py-10 lg:py-12 bg-white">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <h2 
+                className="font-serif italic text-gray-900"
+                style={{
+                  fontFamily: "'Playfair Display', 'Georgia', 'Times New Roman', serif",
+                  fontSize: 'clamp(1.75rem, 3.5vw, 2.5rem)',
+                  fontWeight: 400,
+                  letterSpacing: '0.02em',
+                  lineHeight: '1.5',
+                  fontStyle: 'italic',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.03)'
+                }}
+              >
+                "{locale === 'en' && section.titleEn ? section.titleEn : section.title}"
+              </h2>
+            </div>
+          </div>
+        </section>
+      ))}
+
+      {/* FAQ Sections */}
+      {faqSections.length > 0 && faqSections.map((section) => (
+        <HomeFAQSection
+          key={section.id}
+          section={section}
+          locale={locale}
+        />
+      ))}
 
       {/* Feature Sections (Grid 3 columns) */}
       {featureSections.length > 0 && (

@@ -4,6 +4,8 @@ import { Navigation } from '../components/Navigation'
 import { Footer } from '../components/Footer'
 import { WhatsAppButton } from '../components/WhatsAppButton'
 import { BlockRenderer } from '../components/BlockRenderer'
+import { HeroSlider } from '../components/HeroSlider'
+import { PageSections } from '../components/PageSections'
 import { apiClient } from '../lib/api-client'
 import { getImageUrl } from '../lib/utils-image-url'
 import { useSettings } from '../lib/use-settings'
@@ -43,7 +45,13 @@ export default function DynamicPage() {
 
         if (foundPage) {
           try {
-            const blocks = await apiClient.get(`/admin/pages/${foundPage.id}/blocks`)
+            // Load blocks, heroes, and sections
+            const [blocks, heroesData, sections] = await Promise.all([
+              apiClient.get(`/admin/pages/${foundPage.id}/blocks`).catch(() => []),
+              apiClient.get(`/admin/pages/${foundPage.id}/hero`).catch(() => []),
+              apiClient.get(`/admin/pages/${foundPage.id}/sections`).catch(() => [])
+            ])
+            
             // Ensure blocks have valid data structure
             const validBlocks = (Array.isArray(blocks) ? blocks : []).map((b: any) => {
               // Ensure data is properly structured
@@ -57,11 +65,28 @@ export default function DynamicPage() {
               }
               return b
             }).filter((b: any) => b.isActive && b.id && b.id !== foundPage.id).sort((a: any, b: any) => a.order - b.order)
+            
+            // Process heroes - filter active and sort by order
+            const heroes = (Array.isArray(heroesData) ? heroesData : [])
+              .filter((h: any) => h.isActive !== false)
+              .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+            
+            // Process sections - filter active and sort by order
+            const processedSections = (Array.isArray(sections) ? sections : [])
+              .filter((s: any) => s.isActive !== false)
+              .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+            
             foundPage.blocks = validBlocks
-            console.log('Loaded blocks for page:', foundPage.id, 'Blocks:', validBlocks.length)
+            foundPage.heroes = heroes
+            foundPage.sections = processedSections
+            console.log('Loaded blocks for page:', foundPage.id, 'Blocks:', validBlocks.length, 'Heroes:', heroes.length, 'Sections:', processedSections.length)
+            console.log('Sections data:', processedSections)
+            console.log('Video-profile sections:', processedSections.filter((s: any) => s.type === 'video-profile'))
           } catch (error) {
             console.error('Error loading blocks:', error)
             foundPage.blocks = []
+            foundPage.heroes = []
+            foundPage.sections = []
           }
           setPage(foundPage)
         } else if (foundCategory) {
@@ -210,20 +235,27 @@ export default function DynamicPage() {
   const heroSliderBlock = hasHeroSlider ? page.blocks[0] : null
   // All blocks will be rendered by BlockRenderer, but hero-slider is rendered separately if it's the first block
   const allBlocks = page.blocks || []
+  
+  // Check if page has custom heroes or sections
+  const hasPageHeroes = page.heroes && Array.isArray(page.heroes) && page.heroes.length > 0
+  const hasPageSections = page.sections && page.sections.length > 0
 
   return (
     <div className="min-h-screen bg-white">
-      {hasHeroSlider && heroSliderBlock ? (
-        <div className="relative">
-          <Navigation 
-            menus={menus} 
-            locale={locale}
-            logo={settings.website_logo?.value || null}
-            websiteName={settings.website_title?.value || null}
-            showWebsiteName={settings.show_website_name?.value === 'true'}
-          />
-          <BlockRenderer blocks={[heroSliderBlock]} locale={locale} />
-        </div>
+      {/* Navigation */}
+      <Navigation 
+        menus={menus} 
+        locale={locale}
+        logo={settings.website_logo?.value || null}
+        websiteName={settings.website_title?.value || null}
+        showWebsiteName={settings.show_website_name?.value === 'true'}
+      />
+      
+      {/* Page Heroes (custom heroes per page) - Use HeroSlider like homepage */}
+      {hasPageHeroes ? (
+        <HeroSlider sliders={page.heroes} locale={locale} />
+      ) : hasHeroSlider && heroSliderBlock ? (
+        <BlockRenderer blocks={[heroSliderBlock]} locale={locale} />
       ) : needsSpecialHeader ? (
         <div className="relative bg-primary-600 text-white">
           <Navigation 
@@ -242,14 +274,7 @@ export default function DynamicPage() {
           </div>
         </div>
       ) : (
-        <div className="relative">
-          <Navigation 
-            menus={menus} 
-            locale={locale}
-            logo={settings.website_logo?.value || null}
-            websiteName={settings.website_title?.value || null}
-            showWebsiteName={settings.show_website_name?.value === 'true'}
-          />
+        <>
           {page.featuredImage && (
             <div className="h-64 md:h-80 lg:h-96 bg-gradient-to-r from-gray-200 to-gray-300 relative pt-20 overflow-hidden">
               <div className="absolute inset-0">
@@ -267,7 +292,12 @@ export default function DynamicPage() {
               </div>
             </div>
           )}
-        </div>
+        </>
+      )}
+
+      {/* Page Sections (custom sections per page) */}
+      {hasPageSections && (
+        <PageSections sections={page.sections} locale={locale} />
       )}
 
       {/* Render all blocks if available, otherwise render page content */}
@@ -275,7 +305,7 @@ export default function DynamicPage() {
         <div className="bg-white">
           <BlockRenderer blocks={allBlocks} locale={locale} />
         </div>
-      ) : (
+      ) : !hasPageSections ? (
         // Only show content if there are no blocks or if hero-slider is not present
         <div className="bg-gradient-to-b from-gray-50 to-white">
           {/* Modern Hero Section */}
@@ -332,7 +362,7 @@ export default function DynamicPage() {
             </div>
           </article>
         </div>
-      )}
+      ) : null}
 
         <Footer 
           locale={locale}

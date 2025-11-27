@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,11 +8,13 @@ import { Upload, X, Loader2 } from 'lucide-react'
 import { apiClient } from '../../lib/api-client'
 import { getImageUrl } from '../../lib/utils-image-url'
 import { FAQItemsManager } from './FAQItemsManager'
-import { FiguresItemsManager } from './FiguresItemsManager'
-import { PartnershipsItemsManager } from './PartnershipsItemsManager'
+import { NavigationItemsManager } from './NavigationItemsManager'
+import { ProgramItemsManager } from './ProgramItemsManager'
+import { FacilityItemsManager } from './FacilityItemsManager'
+import { ExtracurricularItemsManager } from './ExtracurricularItemsManager'
 
 const sectionSchema = z.object({
-  type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'faq', 'figures', 'partnerships', 'news-section']),
+  type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'news-section', 'faq', 'accreditation', 'navigation-grid', 'program-cards', 'facility-gallery', 'extracurricular-detail']),
   title: z.string().optional(),
   titleEn: z.string().optional(),
   subtitle: z.string().optional(),
@@ -31,6 +32,34 @@ const sectionSchema = z.object({
     (val) => !val || val.startsWith('/') || val.startsWith('http://') || val.startsWith('https://'),
     { message: 'URL harus dimulai dengan / untuk path relatif atau http:///https:// untuk URL lengkap' }
   ).optional().or(z.literal('')),
+  badgeImage: z.string().optional(),
+  accreditationNumber: z.string().optional(),
+  accreditationBody: z.string().optional(),
+  navigationItems: z.array(z.object({
+    id: z.string(),
+    label: z.string(),
+    url: z.string(),
+    icon: z.string().optional(),
+  })).optional(),
+  programItems: z.array(z.object({
+    id: z.string(),
+    icon: z.string(),
+    title: z.string(),
+    description: z.string(),
+    url: z.string().optional(),
+  })).optional(),
+  facilityItems: z.array(z.object({
+    id: z.string(),
+    image: z.string(),
+    caption: z.string().optional(),
+    url: z.string().optional(),
+  })).optional(),
+  extracurricularItems: z.array(z.object({
+    id: z.string(),
+    image: z.string(),
+    title: z.string(),
+    description: z.string(),
+  })).optional(),
   faqItems: z.array(z.object({
     id: z.string(),
     question: z.string(),
@@ -39,31 +68,14 @@ const sectionSchema = z.object({
     answerEn: z.string().optional(),
     order: z.number(),
   })).optional(),
-  figures: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    nameEn: z.string().optional(),
-    position: z.string(),
-    positionEn: z.string().optional(),
-    image: z.string(),
-  })).optional(),
-  partnerships: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    nameEn: z.string().optional(),
-    logo: z.string().optional(),
-    location: z.string().optional(),
-    locationEn: z.string().optional(),
-    category: z.enum(['international', 'health', 'student-escort']),
-    order: z.number(),
-  })).optional(),
   order: z.number().int().min(0).default(0),
   isActive: z.boolean().default(true),
 })
 
 type SectionFormData = z.infer<typeof sectionSchema>
 
-interface HomeSectionFormProps {
+interface PageSectionFormProps {
+  pageId: string
   section?: {
     id: string
     type: string
@@ -82,16 +94,14 @@ interface HomeSectionFormProps {
     buttonTextEn?: string | null
     buttonUrl?: string | null
     faqItems?: string | any[] | null
-    figures?: string | any[] | null
-    partnerships?: string | any[] | null
     order: number
     isActive: boolean
   }
-  defaultType?: 'motto' | 'video-profile' | 'admission' | 'feature' | 'split-screen' | 'masjid-al-fatih' | 'university-map' | 'global-stage' | 'faq' | 'figures' | 'partnerships' | 'news-section'
+  onSuccess?: () => void
+  onCancel?: () => void
 }
 
-export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) {
-  const navigate = useNavigate()
+export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSectionFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -101,52 +111,28 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
   const [previewImages, setPreviewImages] = useState<string[]>(
     section?.images || []
   )
-  const [previewImageLeft, setPreviewImageLeft] = useState<string | null>(
-    section?.imageLeft ? getImageUrl(section.imageLeft) : null
+  
+  // Parse items from section (could be JSON string or array)
+  const parseItems = (items: any) => {
+    if (!items) return []
+    if (Array.isArray(items)) return items
+    try {
+      const parsed = JSON.parse(items)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+  
+  const [faqItems, setFaqItems] = useState<any[]>(parseItems(section?.faqItems))
+  const [navigationItems, setNavigationItems] = useState<any[]>(parseItems((section as any)?.navigationItems))
+  const [programItems, setProgramItems] = useState<any[]>(parseItems((section as any)?.programItems))
+  const [facilityItems, setFacilityItems] = useState<any[]>(parseItems((section as any)?.facilityItems))
+  const [extracurricularItems, setExtracurricularItems] = useState<any[]>(parseItems((section as any)?.extracurricularItems))
+  
+  const [previewBadgeImage, setPreviewBadgeImage] = useState<string | null>(
+    (section as any)?.badgeImage ? getImageUrl((section as any).badgeImage) : null
   )
-  const [previewImageRight, setPreviewImageRight] = useState<string | null>(
-    section?.imageRight ? getImageUrl(section.imageRight) : null
-  )
-  
-  // Parse faqItems from section (could be JSON string or array)
-  const parseFAQItems = () => {
-    if (!section?.faqItems) return []
-    if (Array.isArray(section.faqItems)) return section.faqItems
-    try {
-      const parsed = JSON.parse(section.faqItems)
-      return Array.isArray(parsed) ? parsed : []
-    } catch {
-      return []
-    }
-  }
-  
-  // Parse figures from section (could be JSON string or array)
-  const parseFigures = () => {
-    if (!section?.figures) return []
-    if (Array.isArray(section.figures)) return section.figures
-    try {
-      const parsed = JSON.parse(section.figures)
-      return Array.isArray(parsed) ? parsed : []
-    } catch {
-      return []
-    }
-  }
-  
-  // Parse partnerships from section (could be JSON string or array)
-  const parsePartnerships = () => {
-    if (!section?.partnerships) return []
-    if (Array.isArray(section.partnerships)) return section.partnerships
-    try {
-      const parsed = JSON.parse(section.partnerships)
-      return Array.isArray(parsed) ? parsed : []
-    } catch {
-      return []
-    }
-  }
-  
-  const [faqItems, setFaqItems] = useState<any[]>(parseFAQItems())
-  const [figures, setFigures] = useState<any[]>(parseFigures())
-  const [partnerships, setPartnerships] = useState<any[]>(parsePartnerships())
 
   const {
     register,
@@ -158,7 +144,7 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
     resolver: zodResolver(sectionSchema),
     defaultValues: section
       ? {
-          type: section.type as 'motto' | 'video-profile' | 'admission' | 'feature' | 'split-screen' | 'masjid-al-fatih' | 'university-map' | 'global-stage' | 'faq' | 'figures' | 'partnerships' | 'news-section',
+          type: section.type as any,
           title: section.title || undefined,
           titleEn: section.titleEn || undefined,
           subtitle: section.subtitle || undefined,
@@ -167,19 +153,23 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
           contentEn: section.contentEn || undefined,
           image: section.image || undefined,
           images: section.images || undefined,
-          imageLeft: section.imageLeft || undefined,
-          imageRight: section.imageRight || undefined,
           videoUrl: section.videoUrl || undefined,
           buttonText: section.buttonText || undefined,
           buttonTextEn: section.buttonTextEn || undefined,
           buttonUrl: section.buttonUrl || undefined,
-          faqItems: parseFAQItems(),
-          figures: parseFigures(),
+          faqItems: parseItems(section.faqItems),
+          badgeImage: (section as any)?.badgeImage || undefined,
+          accreditationNumber: (section as any)?.accreditationNumber || undefined,
+          accreditationBody: (section as any)?.accreditationBody || undefined,
+          navigationItems: parseItems((section as any)?.navigationItems),
+          programItems: parseItems((section as any)?.programItems),
+          facilityItems: parseItems((section as any)?.facilityItems),
+          extracurricularItems: parseItems((section as any)?.extracurricularItems),
           order: section.order ?? 0,
           isActive: section.isActive ?? true,
         }
       : {
-          type: defaultType || 'feature',
+          type: 'feature',
           order: 0,
           isActive: true,
           images: undefined,
@@ -190,8 +180,6 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
           content: undefined,
           contentEn: undefined,
           image: undefined,
-          imageLeft: undefined,
-          imageRight: undefined,
           videoUrl: undefined,
           buttonText: undefined,
           buttonTextEn: undefined,
@@ -221,7 +209,7 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
     setError('')
 
     try {
-      const data = await apiClient.upload('/admin/upload', file, 'home-sections')
+      const data = await apiClient.upload('/admin/upload', file, 'page-sections')
       const imageUrl = data.url || data.path || ''
       if (!imageUrl) {
         throw new Error('Upload gagal: URL tidak ditemukan dalam response')
@@ -252,7 +240,7 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
         if (file.size > 5 * 1024 * 1024) continue
 
         try {
-          const data = await apiClient.upload('/admin/upload', file, 'home-sections')
+          const data = await apiClient.upload('/admin/upload', file, 'page-sections')
           const imageUrl = data.url || data.path || ''
           if (imageUrl) {
             uploadedUrls.push(imageUrl)
@@ -273,85 +261,33 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
     }
   }
 
+  const handleBadgeImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      alert('File harus berupa gambar')
+      return
+    }
+
+    setUploading(true)
+    try {
+      const data = await apiClient.upload('/admin/upload', file, 'general')
+      const imageUrl = data.url || data.path || ''
+      if (imageUrl) {
+        setValue('badgeImage', imageUrl)
+        setPreviewBadgeImage(getImageUrl(imageUrl))
+      }
+    } catch (err) {
+      alert('Gagal mengupload gambar')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const handleRemoveImage = () => {
     setValue('image', '')
     setPreviewImage(null)
-  }
-
-  const handleFileUploadLeft = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (!file.type.startsWith('image/')) {
-      setError('File harus berupa gambar')
-      return
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Ukuran file maksimal 5MB')
-      return
-    }
-
-    setUploading(true)
-    setError('')
-
-    try {
-      const data = await apiClient.upload('/admin/upload', file, 'home-sections')
-      const imageUrl = data.url || data.path || ''
-      if (!imageUrl) {
-        throw new Error('Upload gagal: URL tidak ditemukan dalam response')
-      }
-      setValue('imageLeft', imageUrl, { shouldValidate: true })
-      setPreviewImageLeft(getImageUrl(imageUrl))
-    } catch (err: any) {
-      console.error('Upload error:', err)
-      setError(err.message || 'Gagal mengupload gambar')
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const handleFileUploadRight = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (!file.type.startsWith('image/')) {
-      setError('File harus berupa gambar')
-      return
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Ukuran file maksimal 5MB')
-      return
-    }
-
-    setUploading(true)
-    setError('')
-
-    try {
-      const data = await apiClient.upload('/admin/upload', file, 'home-sections')
-      const imageUrl = data.url || data.path || ''
-      if (!imageUrl) {
-        throw new Error('Upload gagal: URL tidak ditemukan dalam response')
-      }
-      setValue('imageRight', imageUrl, { shouldValidate: true })
-      setPreviewImageRight(getImageUrl(imageUrl))
-    } catch (err: any) {
-      console.error('Upload error:', err)
-      setError(err.message || 'Gagal mengupload gambar')
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const handleRemoveImageLeft = () => {
-    setValue('imageLeft', '')
-    setPreviewImageLeft(null)
-  }
-
-  const handleRemoveImageRight = () => {
-    setValue('imageRight', '')
-    setPreviewImageRight(null)
   }
 
   const handleRemoveMultipleImage = (index: number) => {
@@ -366,10 +302,10 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
     setError('')
 
     try {
-      // Prepare form data - ensure images is properly handled
       const imagesArray = Array.isArray(data.images) ? data.images : (watchedImages || [])
       
       const formData = {
+        pageId,
         type: data.type,
         title: data.title || null,
         titleEn: data.titleEn || null,
@@ -379,26 +315,31 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
         contentEn: data.contentEn || null,
         image: data.image || null,
         images: imagesArray.length > 0 ? imagesArray : null,
-        imageLeft: data.imageLeft || null,
-        imageRight: data.imageRight || null,
         videoUrl: data.videoUrl || null,
         buttonText: data.buttonText || null,
         buttonTextEn: data.buttonTextEn || null,
         buttonUrl: data.buttonUrl || null,
+        badgeImage: data.badgeImage || null,
+        accreditationNumber: data.accreditationNumber || null,
+        accreditationBody: data.accreditationBody || null,
+        navigationItems: sectionType === 'navigation-grid' && navigationItems.length > 0 ? JSON.stringify(navigationItems) : null,
+        programItems: sectionType === 'program-cards' && programItems.length > 0 ? JSON.stringify(programItems) : null,
+        facilityItems: sectionType === 'facility-gallery' && facilityItems.length > 0 ? JSON.stringify(facilityItems) : null,
+        extracurricularItems: sectionType === 'extracurricular-detail' && extracurricularItems.length > 0 ? JSON.stringify(extracurricularItems) : null,
         faqItems: sectionType === 'faq' && faqItems.length > 0 ? JSON.stringify(faqItems) : null,
-        figures: sectionType === 'figures' && figures.length > 0 ? JSON.stringify(figures) : null,
-        partnerships: sectionType === 'partnerships' && partnerships.length > 0 ? JSON.stringify(partnerships) : null,
         order: data.order || 0,
         isActive: data.isActive !== undefined ? data.isActive : true,
       }
       
       if (section) {
-        await apiClient.put(`/admin/home-sections/${section.id}`, formData)
+        await apiClient.put(`/admin/page-sections/${section.id}`, formData)
       } else {
-        await apiClient.post('/admin/home-sections/create', formData)
+        await apiClient.post(`/admin/pages/${pageId}/sections/create`, formData)
       }
 
-      navigate('/admin/home-sections')
+      if (onSuccess) {
+        onSuccess()
+      }
     } catch (err: any) {
       console.error('Submit error:', err)
       setError(err.message || 'Terjadi kesalahan saat menyimpan')
@@ -444,10 +385,13 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
           <option value="university-map">University Map (Peta Universitas)</option>
           <option value="global-stage">Global Stage (International Program)</option>
           <option value="feature">Feature</option>
-          <option value="faq">FAQ Section</option>
-          <option value="figures">Figures / Tokoh-Tokoh</option>
-          <option value="partnerships">Partnerships / Kerjasama</option>
           <option value="news-section">News Section (Berita)</option>
+          <option value="faq">FAQ Section</option>
+          <option value="accreditation">Accreditation (Akreditasi)</option>
+          <option value="navigation-grid">Navigation Grid (Grid Navigasi)</option>
+          <option value="program-cards">Program Cards (Kartu Program)</option>
+          <option value="facility-gallery">Facility Gallery (Galeri Fasilitas)</option>
+          <option value="extracurricular-detail">Extracurricular Detail (Detail Ekstrakurikuler)</option>
         </select>
         {errors.type && (
           <p className="mt-1 text-sm text-red-600">{errors.type.message}</p>
@@ -506,7 +450,7 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
         </div>
       )}
 
-      {(sectionType === 'admission' || sectionType === 'feature' || sectionType === 'split-screen' || sectionType === 'masjid-al-fatih' || sectionType === 'global-stage') && (
+      {(sectionType === 'admission' || sectionType === 'feature' || sectionType === 'split-screen' || sectionType === 'masjid-al-fatih' || sectionType === 'news-section' || sectionType === 'global-stage') && (
         <>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -543,26 +487,189 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
         />
       )}
 
-      {/* Figures Items Manager */}
-      {sectionType === 'figures' && (
-        <FiguresItemsManager
-          value={figures}
+      {/* Accreditation Section */}
+      {sectionType === 'accreditation' && (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Badge Image *
+            </label>
+            {previewBadgeImage ? (
+              <div className="relative mb-4">
+                <img
+                  src={previewBadgeImage}
+                  alt="Badge Preview"
+                  className="h-32 w-32 object-contain border border-gray-300 rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue('badgeImage', '')
+                    setPreviewBadgeImage(null)
+                  }}
+                  className="absolute top-0 right-0 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBadgeImageUpload}
+                  disabled={uploading}
+                  className="hidden"
+                  id="badge-image-upload"
+                />
+                <label
+                  htmlFor="badge-image-upload"
+                  className={`cursor-pointer flex flex-col items-center justify-center ${
+                    uploading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="animate-spin text-primary-600 mb-2" size={32} />
+                      <span className="text-gray-600">Mengupload...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="text-gray-400 mb-2" size={32} />
+                      <span className="text-gray-600 mb-1">Klik untuk upload badge</span>
+                    </>
+                  )}
+                </label>
+              </div>
+            )}
+            <input
+              {...register('badgeImage')}
+              type="hidden"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Accreditation Number (Opsional)
+            </label>
+            <input
+              {...register('accreditationNumber')}
+              type="text"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="267/BAN-PDM/SK/2024"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Accreditation Body (Opsional)
+            </label>
+            <input
+              {...register('accreditationBody')}
+              type="text"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="BAN-PDM"
+            />
+          </div>
+        </>
+      )}
+
+      {/* Navigation Grid Items Manager */}
+      {sectionType === 'navigation-grid' && (
+        <NavigationItemsManager
+          value={navigationItems}
           onChange={(items) => {
-            setFigures(items)
-            setValue('figures', items, { shouldValidate: true })
+            setNavigationItems(items)
+            setValue('navigationItems', items, { shouldValidate: true })
           }}
         />
       )}
 
-      {/* Partnerships Items Manager */}
-      {sectionType === 'partnerships' && (
-        <PartnershipsItemsManager
-          value={partnerships}
+      {/* Program Cards Items Manager */}
+      {sectionType === 'program-cards' && (
+        <ProgramItemsManager
+          value={programItems}
           onChange={(items) => {
-            setPartnerships(items)
-            setValue('partnerships', items, { shouldValidate: true })
+            setProgramItems(items)
+            setValue('programItems', items, { shouldValidate: true })
           }}
         />
+      )}
+
+      {/* Facility Gallery Items Manager */}
+      {sectionType === 'facility-gallery' && (
+        <FacilityItemsManager
+          value={facilityItems}
+          onChange={(items) => {
+            setFacilityItems(items)
+            setValue('facilityItems', items, { shouldValidate: true })
+          }}
+        />
+      )}
+
+      {/* Extracurricular Detail Items Manager */}
+      {sectionType === 'extracurricular-detail' && (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Image Left (Gambar Siswa di Kiri) *
+            </label>
+            {previewImage ? (
+              <div className="relative mb-4">
+                <img
+                  src={previewImage}
+                  alt="Preview"
+                  className="h-48 w-full object-cover rounded-lg border border-gray-300"
+                />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                  className="hidden"
+                  id="extracurricular-image-left-upload"
+                />
+                <label
+                  htmlFor="extracurricular-image-left-upload"
+                  className={`cursor-pointer flex flex-col items-center justify-center ${
+                    uploading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="animate-spin text-primary-600 mb-2" size={32} />
+                      <span className="text-gray-600">Mengupload...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="text-gray-400 mb-2" size={32} />
+                      <span className="text-gray-600 mb-1">Klik untuk upload gambar</span>
+                    </>
+                  )}
+                </label>
+              </div>
+            )}
+            <input
+              {...register('imageLeft')}
+              type="hidden"
+            />
+          </div>
+          <ExtracurricularItemsManager
+            value={extracurricularItems}
+            onChange={(items) => {
+              setExtracurricularItems(items)
+              setValue('extracurricularItems', items, { shouldValidate: true })
+            }}
+          />
+        </>
       )}
 
       {sectionType === 'video-profile' && (
@@ -580,7 +687,7 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
       )}
 
       {/* Single Image Upload */}
-      {(sectionType === 'motto' || sectionType === 'video-profile' || sectionType === 'admission' || sectionType === 'split-screen' || sectionType === 'masjid-al-fatih' || sectionType === 'university-map' || sectionType === 'global-stage' || sectionType === 'faq' || sectionType === 'figures') && (
+      {(sectionType === 'motto' || sectionType === 'video-profile' || sectionType === 'admission' || sectionType === 'split-screen' || sectionType === 'masjid-al-fatih' || sectionType === 'university-map' || sectionType === 'global-stage' || sectionType === 'news-section' || sectionType === 'faq' || sectionType === 'accreditation') && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Gambar Utama
@@ -637,129 +744,6 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
             {...register('image')}
             type="hidden"
           />
-        </div>
-      )}
-
-      {/* Image Left and Right Upload (for masjid-al-fatih) */}
-      {sectionType === 'masjid-al-fatih' && (
-        <div className="grid grid-cols-2 gap-4">
-          {/* Image Left */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Gambar Kiri
-            </label>
-            
-            {previewImageLeft ? (
-              <div className="relative mb-4">
-                <img
-                  src={previewImageLeft}
-                  alt="Preview Left"
-                  className="h-48 w-full object-cover rounded-lg border border-gray-300"
-                />
-                <button
-                  type="button"
-                  onClick={handleRemoveImageLeft}
-                  className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUploadLeft}
-                  disabled={uploading}
-                  className="hidden"
-                  id="image-left-upload"
-                />
-                <label
-                  htmlFor="image-left-upload"
-                  className={`cursor-pointer flex flex-col items-center justify-center ${
-                    uploading ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="animate-spin text-primary-600 mb-2" size={32} />
-                      <span className="text-gray-600">Mengupload...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="text-gray-400 mb-2" size={32} />
-                      <span className="text-gray-600 mb-1">Klik untuk upload gambar kiri</span>
-                      <span className="text-sm text-gray-500">PNG, JPG, GIF maksimal 5MB</span>
-                    </>
-                  )}
-                </label>
-              </div>
-            )}
-            
-            <input
-              {...register('imageLeft')}
-              type="hidden"
-            />
-          </div>
-
-          {/* Image Right */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Gambar Kanan
-            </label>
-            
-            {previewImageRight ? (
-              <div className="relative mb-4">
-                <img
-                  src={previewImageRight}
-                  alt="Preview Right"
-                  className="h-48 w-full object-cover rounded-lg border border-gray-300"
-                />
-                <button
-                  type="button"
-                  onClick={handleRemoveImageRight}
-                  className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUploadRight}
-                  disabled={uploading}
-                  className="hidden"
-                  id="image-right-upload"
-                />
-                <label
-                  htmlFor="image-right-upload"
-                  className={`cursor-pointer flex flex-col items-center justify-center ${
-                    uploading ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="animate-spin text-primary-600 mb-2" size={32} />
-                      <span className="text-gray-600">Mengupload...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="text-gray-400 mb-2" size={32} />
-                      <span className="text-gray-600 mb-1">Klik untuk upload gambar kanan</span>
-                      <span className="text-sm text-gray-500">PNG, JPG, GIF maksimal 5MB</span>
-                    </>
-                  )}
-                </label>
-              </div>
-            )}
-            
-            <input
-              {...register('imageRight')}
-              type="hidden"
-            />
-          </div>
         </div>
       )}
 
@@ -830,7 +814,7 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
       )}
 
       {/* Button Fields */}
-      {(sectionType !== 'university-map' && sectionType !== 'masjid-al-fatih') && (
+      {(sectionType !== 'university-map' && sectionType !== 'masjid-al-fatih' && sectionType !== 'news-section') && (
         <>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -902,19 +886,22 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
       </div>
 
       <div className="flex justify-end space-x-4">
-        <button
-          type="button"
-          onClick={() => navigate('/admin/home-sections')}
-          className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-        >
-          Batal
-        </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            Batal
+          </button>
+        )}
         <button
           type="submit"
           disabled={isLoading}
-          className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
         >
-          {isLoading ? 'Menyimpan...' : 'Simpan'}
+          {isLoading && <Loader2 size={18} className="animate-spin" />}
+          <span>{isLoading ? 'Menyimpan...' : 'Simpan'}</span>
         </button>
       </div>
     </form>

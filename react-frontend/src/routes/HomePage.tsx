@@ -1,14 +1,13 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Navigation } from '../components/Navigation'
 import { Footer } from '../components/Footer'
 import { WhatsAppButton } from '../components/WhatsAppButton'
 import { HeroSlider } from '../components/HeroSlider'
-import { HomeSections } from '../components/HomeSections'
+import { SectionRenderer } from '../components/SectionRenderer'
 import { FAQSection } from '../components/FAQSection'
 import { FiguresSection } from '../components/FiguresSection'
 import { PartnershipsSection } from '../components/PartnershipsSection'
-import { getImageUrl } from '../lib/utils-image-url'
 import { apiClient } from '../lib/api-client'
 import { useSettings } from '../lib/use-settings'
 import { ArrowRight } from 'lucide-react'
@@ -18,7 +17,7 @@ export default function HomePage() {
   const locale = (searchParams.get('locale') as 'id' | 'en') || 'id'
   
   const [menus, setMenus] = useState<any[]>([])
-  const [latestPosts, setLatestPosts] = useState<any[]>([])
+  const [, setLatestPosts] = useState<any[]>([])
   const [sliders, setSliders] = useState<any[]>([])
   const [homeSections, setHomeSections] = useState<any[]>([])
   const [faqs, setFaqs] = useState<any[]>([])
@@ -26,6 +25,7 @@ export default function HomePage() {
   const [partnerships, setPartnerships] = useState<any[]>([])
   const [settings, setSettings] = useState<any>({})
   const [loading, setLoading] = useState(true)
+  const [activeVideo, setActiveVideo] = useState<{ sectionId: string; videoId: string } | null>(null)
 
   // Apply settings (favicon, title) ke document
   useSettings(settings)
@@ -167,72 +167,90 @@ export default function HomePage() {
         </>
       )}
 
-      {/* Home Sections */}
-      <HomeSections sections={homeSections} locale={locale} />
+      {/* Render all sections in order */}
+      {(() => {
+        // Sort all sections by order
+        const sortedSections = [...homeSections]
+          .filter((s: any) => s.isActive)
+          .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
 
-      {/* FAQ Section */}
-      <FAQSection faqs={faqs} locale={locale} />
+        const handlePlayVideo = (section: any) => {
+          if (!section.videoUrl) return
+          const trimmed = section.videoUrl.trim()
+          const youtubeRegex = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/
+          const match = trimmed.match(youtubeRegex)
+          if (match && match[1]) {
+            setActiveVideo({ sectionId: section.id, videoId: match[1] })
+          } else {
+            window.open(section.videoUrl, '_blank', 'noopener,noreferrer')
+          }
+        }
 
-      {/* Latest News Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {(settings.news_section_quote?.value || settings.news_section_quote?.valueEn) && (
-            <div className="text-center mb-8">
-              <h2 className="text-3xl md:text-4xl font-serif italic text-gray-900 mb-4">
-                "{settings.news_section_quote?.value}"
-              </h2>
-            </div>
-          )}
+        // Group consecutive video-profile sections together
+        const renderedSections: React.ReactElement[] = []
+        let i = 0
+        
+        while (i < sortedSections.length) {
+          const section = sortedSections[i]
           
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
-              {settings.news_section_title?.value || 'Berita Terbaru'}
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {latestPosts.map((post: any) => (
-              <Link key={post.id} to={`/berita/${post.slug}`}>
-                <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
-                  {post.featuredImage && (
-                    <div className="h-48 bg-gray-200 relative">
-                      <img
-                        src={getImageUrl(post.featuredImage)}
-                        alt={post.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          console.error('Failed to load image:', post.featuredImage)
-                          e.currentTarget.src = '/placeholder-image.png'
-                        }}
+          // If it's a video-profile, collect all consecutive video-profiles
+          if (section.type === 'video-profile') {
+            const videoProfiles: any[] = [section]
+            i++
+            while (i < sortedSections.length && sortedSections[i].type === 'video-profile') {
+              videoProfiles.push(sortedSections[i])
+              i++
+            }
+            
+            // Render grouped video profiles
+            renderedSections.push(
+              <section key={`video-group-${videoProfiles[0].id}`} className="py-8 md:py-10 lg:py-12 bg-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                    {videoProfiles.map((videoSection: any) => (
+                      <SectionRenderer
+                        key={videoSection.id}
+                        section={videoSection}
+                        locale={locale}
+                        activeVideo={activeVideo}
+                        onPlayVideo={handlePlayVideo}
+                        onCloseVideo={() => setActiveVideo(null)}
+                        isGrouped={true}
                       />
-                    </div>
-                  )}
-                  <div className="p-6">
-                    <p className="text-sm text-gray-500 mb-2">
-                      {post.publishedAt && new Date(post.publishedAt).toLocaleDateString('id-ID', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </p>
-                    <h3 className="text-xl font-semibold mb-2 line-clamp-2 text-gray-900">
-                      {post.title}
-                    </h3>
-                    {post.excerpt && (
-                      <p className="text-gray-600 line-clamp-3 mb-4">
-                        {post.excerpt}
-                      </p>
-                    )}
-                    <span className="text-primary-600 font-medium hover:text-primary-700 transition-colors">
-                      Selengkapnya →
-                    </span>
+                    ))}
                   </div>
                 </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+              </section>
+            )
+          } else {
+            // Render other sections individually
+            renderedSections.push(
+              <SectionRenderer
+                key={section.id}
+                section={section}
+                locale={locale}
+                activeVideo={activeVideo}
+                onPlayVideo={handlePlayVideo}
+                onCloseVideo={() => setActiveVideo(null)}
+              />
+            )
+            i++
+          }
+        }
+
+        return renderedSections
+      })()}
+
+      {/* FAQ Section - Only show if no FAQ section in HomeSections */}
+      {(() => {
+        const hasFAQSection = homeSections.some((s: any) => s.type === 'faq' && s.isActive)
+        if (!hasFAQSection && faqs.length > 0) {
+          return <FAQSection faqs={faqs} locale={locale} />
+        }
+        return null
+      })()}
+
+     
 
       {/* Figures Section */}
       <FiguresSection 

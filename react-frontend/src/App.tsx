@@ -20,7 +20,11 @@ import PartnershipsPage from './routes/admin/PartnershipsPage'
 import PagesPage from './routes/admin/PagesPage'
 import PageEditPage from './routes/admin/PageEditPage'
 import PageNewPage from './routes/admin/PageNewPage'
+import PageHeroPage from './routes/admin/PageHeroPage'
+import PageSectionPage from './routes/admin/PageSectionPage'
 import PostsPage from './routes/admin/PostsPage'
+import PostNewPage from './routes/admin/PostNewPage'
+import PostEditPage from './routes/admin/PostEditPage'
 import MenusPage from './routes/admin/MenusPage'
 import CategoriesPage from './routes/admin/CategoriesPage'
 import SettingsPage from './routes/admin/SettingsPage'
@@ -57,7 +61,11 @@ function App() {
         <Route path="/admin/pages" element={<PagesPage />} />
         <Route path="/admin/pages/new" element={<PageNewPage />} />
         <Route path="/admin/pages/:id" element={<PageEditPage />} />
+        <Route path="/admin/pages/:pageId/hero" element={<PageHeroPage />} />
+        <Route path="/admin/pages/:pageId/sections" element={<PageSectionPage />} />
         <Route path="/admin/posts" element={<PostsPage />} />
+        <Route path="/admin/posts/new" element={<PostNewPage />} />
+        <Route path="/admin/posts/:id" element={<PostEditPage />} />
         <Route path="/admin/menus" element={<MenusPage />} />
         <Route path="/admin/categories" element={<CategoriesPage />} />
         <Route path="/admin/settings" element={<SettingsPage />} />

@@ -30,9 +30,30 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
   const [activeVideo, setActiveVideo] = useState<{ sliderId: string; videoId: string } | null>(null)
   const [videoLoaded, setVideoLoaded] = useState<{ [key: string]: boolean }>({})
+  const [imagesLoaded, setImagesLoaded] = useState<{ [key: string]: boolean }>({})
   const autoPlayResumeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const activeSliders = sliders.filter(s => s.isActive !== false)
+
+  // Preload all images to ensure they're loaded
+  useEffect(() => {
+    activeSliders.forEach((slider) => {
+      if (slider.image && slider.image.trim() !== '' && slider.image !== 'null') {
+        const img = new Image()
+        img.src = getImageUrl(slider.image)
+        img.onload = () => {
+          setImagesLoaded(prev => ({ ...prev, [slider.id]: true }))
+          if (import.meta.env.DEV) {
+            console.log('Preloaded image for slider:', slider.id, getImageUrl(slider.image))
+          }
+        }
+        img.onerror = () => {
+          console.error('Failed to preload image for slider:', slider.id, getImageUrl(slider.image))
+          setImagesLoaded(prev => ({ ...prev, [slider.id]: false }))
+        }
+      }
+    })
+  }, [activeSliders])
 
   // Debug logging
   useEffect(() => {
@@ -132,8 +153,13 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
   }
 
   // Calculate the transform value to shift the entire slide strip
-  // Ex: Slide 0: translateX(0), Slide 1: translateX(-100%), Slide 2: translateX(-200%)
-  const transformValue = `translateX(-${currentIndex * 100}%)`
+  // Container width = activeSliders.length * 100% (of parent which is 100vw)
+  // Each slide width = 100 / activeSliders.length % of container = 100vw
+  // To show slide N, translate container by N * (100 / activeSliders.length) % of container
+  // For 2 slides: container = 200%, slide = 50% of container = 100vw
+  // Slide 0: translateX(0), Slide 1: translateX(-50% of container) = translateX(-100vw)
+  const slideWidthPercent = 100 / activeSliders.length
+  const transformValue = `translateX(-${currentIndex * slideWidthPercent}%)`
   
   // Debug transform value
   useEffect(() => {
@@ -143,7 +169,9 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
         totalSliders: activeSliders.length,
         transformValue,
         currentSliderId: currentSlider?.id,
-        currentSliderImage: currentSlider?.image
+        currentSliderImage: currentSlider?.image,
+        containerWidth: `${activeSliders.length * 100}%`,
+        slideWidth: `${100 / activeSliders.length}%`
       })
     }
   }, [currentIndex, activeSliders.length, transformValue, currentSlider])
@@ -189,7 +217,7 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
   }
 
   return (
-    <div className="relative w-full h-[85vh] min-h-[700px] overflow-hidden">
+    <div className="relative h-[85vh] min-h-[700px] overflow-hidden" style={{ width: '100vw', position: 'relative' }}>
         
         {/* ========================================= */}
         {/* SLIDER IMAGES: Horizontal Sliding Effect  */}
@@ -200,19 +228,40 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
           style={{
             width: `${activeSliders.length * 100}%`,
             transform: transformValue,
-            position: 'relative'
+            position: 'relative',
+            willChange: 'transform', // Optimize for transform animations
+            display: 'flex',
+            flexDirection: 'row'
           }}
         >
-          {activeSliders.map((slider, mapIndex) => (
+          {activeSliders.map((slider, mapIndex) => {
+            // Each slide is 100/n% of container = 100vw
+            const slideWidthPercent = 100 / activeSliders.length
+            if (import.meta.env.DEV) {
+              console.log(`[HeroSlider] Rendering slide ${mapIndex}:`, {
+                sliderId: slider.id,
+                slideWidthPercent: `${slideWidthPercent}%`,
+                image: slider.image,
+                imageUrl: getImageUrl(slider.image),
+                currentIndex,
+                transformValue,
+                containerWidth: `${activeSliders.length * 100}%`,
+                calculatedTransform: `-${currentIndex * slideWidthPercent}%`
+              })
+            }
+            return (
             <div
               key={slider.id}
-              // Each slide must take up 1/Nth of the total width of the 'flex' container
-              // This ensures each slide is 100% of the viewport width.
+              // Each slide is 100/n% of container (which equals 100vw)
               style={{ 
-                width: `${100 / activeSliders.length}%`,
+                width: `${slideWidthPercent}%`,
+                minWidth: `${slideWidthPercent}%`,
+                maxWidth: `${slideWidthPercent}%`,
                 flexShrink: 0,
+                flexGrow: 0,
                 position: 'relative',
-                height: '100%'
+                height: '100%',
+                overflow: 'hidden' // Ensure images don't overflow
               }}
               className="h-full relative"
               data-slider-index={mapIndex}
@@ -223,16 +272,25 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
                 // Video Background dengan Autoplay (seperti website referensi)
                 <div className="absolute inset-0 w-full h-full">
                   {/* Image sebagai background layer (selalu tampil sebagai fallback) */}
-                  <div
-                    className="absolute inset-0 w-full h-full bg-cover bg-center"
-                    style={{ 
-                      backgroundImage: `url(${getImageUrl(slider.image)})`,
-                      zIndex: 0
-                    }}
-                  >
-                    {/* Dark Gradient Overlay for Readability */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40"></div>
-                  </div>
+                  {slider.image && slider.image.trim() !== '' && slider.image !== 'null' && (
+                    <img
+                      src={getImageUrl(slider.image)}
+                      alt={slider.title || 'Hero Background'}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      style={{ zIndex: 0 }}
+                      loading="eager"
+                      onError={(e) => {
+                        console.error('Failed to load video background image:', {
+                          sliderId: slider.id,
+                          image: slider.image,
+                          imageUrl: getImageUrl(slider.image)
+                        })
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
+                  )}
+                  {/* Dark Gradient Overlay for Readability */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40" style={{ zIndex: 0.5 }}></div>
                   
                   {/* Video layer di atas image */}
                   <video
@@ -287,29 +345,67 @@ export function HeroSlider({ sliders, locale = 'id' }: HeroSliderProps) {
                   <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40 z-10"></div>
                 </div>
               ) : (
-                // Image Background (default) - menggunakan background-image untuk lebih reliable
-                <div 
-                  className="absolute inset-0 w-full h-full bg-cover bg-center bg-gray-200"
-                  style={{ 
-                    zIndex: 0,
-                    backgroundImage: slider.image && slider.image.trim() !== '' && slider.image !== 'null' 
-                      ? `url(${getImageUrl(slider.image)})` 
-                      : 'none',
-                    backgroundColor: '#f3f4f6'
-                  }}
-                >
-                  {/* Fallback jika image tidak ada atau gagal load */}
-                  {(!slider.image || slider.image.trim() === '' || slider.image === 'null') && (
+                // Image Background (default) - menggunakan img tag untuk memastikan semua gambar dimuat
+                <div className="absolute inset-0 w-full h-full bg-gray-200" style={{ zIndex: 0, visibility: 'visible' }}>
+                  {slider.image && slider.image.trim() !== '' && slider.image !== 'null' ? (
+                    <>
+                      <img
+                        src={getImageUrl(slider.image)}
+                        alt={slider.title || 'Hero Slider'}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        style={{ 
+                          zIndex: 0,
+                          minWidth: '100%',
+                          minHeight: '100%',
+                          width: '100%',
+                          height: '100%',
+                          display: 'block',
+                          visibility: 'visible',
+                          opacity: imagesLoaded[slider.id] !== false ? 1 : 0,
+                          transition: 'opacity 0.3s ease-in-out'
+                        }}
+                        loading="eager"
+                        decoding="async"
+                        onError={(e) => {
+                          console.error('Failed to load slider image:', {
+                            sliderId: slider.id,
+                            image: slider.image,
+                            imageUrl: getImageUrl(slider.image),
+                            mapIndex,
+                            slideWidthPercent
+                          })
+                          setImagesLoaded(prev => ({ ...prev, [slider.id]: false }))
+                          e.currentTarget.style.display = 'none'
+                        }}
+                        onLoad={(e) => {
+                          setImagesLoaded(prev => ({ ...prev, [slider.id]: true }))
+                          e.currentTarget.style.opacity = '1'
+                          if (import.meta.env.DEV) {
+                            console.log('Slider image loaded successfully:', {
+                              sliderId: slider.id,
+                              image: slider.image,
+                              imageUrl: getImageUrl(slider.image),
+                              mapIndex,
+                              slideWidthPercent,
+                              elementWidth: e.currentTarget.offsetWidth,
+                              elementHeight: e.currentTarget.offsetHeight
+                            })
+                          }
+                        }}
+                      />
+                      {/* Dark Gradient Overlay for Readability */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40" style={{ zIndex: 1 }}></div>
+                    </>
+                  ) : (
                     <div className="w-full h-full flex items-center justify-center" style={{ zIndex: 0 }}>
                       <p className="text-gray-500">Gambar tidak tersedia</p>
                     </div>
                   )}
-                  {/* Dark Gradient Overlay for Readability */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40" style={{ zIndex: 1 }}></div>
                 </div>
               )}
             </div>
-          ))}
+            )
+          })}
         </div>
 
         {/* ========================================= */}

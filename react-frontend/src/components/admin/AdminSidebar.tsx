@@ -44,16 +44,16 @@ const menuItems: MenuItem[] = [
         href: '/admin/home-sections',
         icon: <Layout size={18} />,
       },
-      {
-        title: 'Split Screen Section',
-        href: '/admin/split-screens',
-        icon: <Layout size={18} />,
-      },
-      {
-        title: 'FAQ Section',
-        href: '/admin/faqs',
-        icon: <Layout size={18} />,
-      },
+      // {
+      //   title: 'Split Screen Section',
+      //   href: '/admin/split-screens',
+      //   icon: <Layout size={18} />,
+      // },
+      // {
+      //   title: 'FAQ Section',
+      //   href: '/admin/faqs',
+      //   icon: <Layout size={18} />,
+      // },
       // {
       //   title: 'Masjid AL FATIH',
       //   href: '/admin/masjid-al-fatih',
