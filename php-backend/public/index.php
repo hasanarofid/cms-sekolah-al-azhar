@@ -173,6 +173,20 @@ $routes = [
     // More flexible route for block IDs (must come before specific route) - support alphanumeric, dash, underscore
     'api/admin/pages/([a-zA-Z0-9_-]+)/blocks/([a-zA-Z0-9_-]+)' => 'PageBlockController@show', // GET untuk show, PUT untuk update, DELETE untuk delete - flexible ID matching
     
+    // Admin - Page Hero
+    'api/admin/pages/([a-zA-Z0-9_-]+)/hero' => 'PageHeroController@index', // GET untuk list all heroes
+    'api/admin/pages/([a-zA-Z0-9_-]+)/hero/create' => 'PageHeroController@create', // POST untuk create
+    'api/admin/page-heroes/([a-zA-Z0-9_-]+)' => 'PageHeroController@show', // GET untuk show, PUT untuk update, DELETE untuk delete
+    'api/admin/page-heroes/([a-zA-Z0-9_-]+)/update' => 'PageHeroController@update',
+    'api/admin/page-heroes/([a-zA-Z0-9_-]+)/delete' => 'PageHeroController@delete',
+    
+    // Admin - Page Sections
+    'api/admin/pages/([a-zA-Z0-9_-]+)/sections' => 'PageSectionController@index', // GET untuk list
+    'api/admin/pages/([a-zA-Z0-9_-]+)/sections/create' => 'PageSectionController@create', // POST untuk create
+    'api/admin/page-sections/([a-zA-Z0-9_-]+)' => 'PageSectionController@show', // GET untuk show, PUT untuk update, DELETE untuk delete
+    'api/admin/page-sections/([a-zA-Z0-9_-]+)/update' => 'PageSectionController@update',
+    'api/admin/page-sections/([a-zA-Z0-9_-]+)/delete' => 'PageSectionController@delete',
+    
     // Admin - Page Blocks (alternative route)
     'api/admin/page-blocks' => 'PageBlockController@all',
     'api/admin/page-blocks/([a-zA-Z0-9]+)' => 'PageBlockController@show',

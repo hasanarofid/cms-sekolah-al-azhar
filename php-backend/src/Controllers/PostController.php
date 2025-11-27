@@ -42,8 +42,9 @@ class PostController extends BaseController
 
         $this->db->query(
             'INSERT INTO Post (id, title, titleEn, slug, content, contentEn, excerpt, excerptEn, 
-             featuredImage, category, categoryId, tags, postType, isPublished, publishedAt, authorId) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+             featuredImage, category, categoryId, tags, postType, seoTitle, seoDescription, seoKeywords, 
+             isPublished, publishedAt, authorId) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $id,
                 $data['title'] ?? '',
@@ -58,6 +59,9 @@ class PostController extends BaseController
                 $data['categoryId'] ?? null,
                 $tags,
                 $data['postType'] ?? 'post',
+                $data['seoTitle'] ?? null,
+                $data['seoDescription'] ?? null,
+                $data['seoKeywords'] ?? null,
                 $data['isPublished'] ?? false ? 1 : 0,
                 ($data['isPublished'] ?? false) ? date('Y-m-d H:i:s') : null,
                 $user['id'],
@@ -100,7 +104,8 @@ class PostController extends BaseController
         $this->db->query(
             'UPDATE Post SET title = ?, titleEn = ?, slug = ?, content = ?, contentEn = ?, 
              excerpt = ?, excerptEn = ?, featuredImage = ?, category = ?, categoryId = ?, 
-             tags = ?, postType = ?, isPublished = ?, publishedAt = ? WHERE id = ?',
+             tags = ?, postType = ?, seoTitle = ?, seoDescription = ?, seoKeywords = ?,
+             isPublished = ?, publishedAt = ? WHERE id = ?',
             [
                 $data['title'] ?? $existing['title'],
                 $data['titleEn'] ?? $existing['titleEn'],
@@ -114,6 +119,9 @@ class PostController extends BaseController
                 $data['categoryId'] ?? $existing['categoryId'],
                 $tags,
                 $data['postType'] ?? $existing['postType'],
+                $data['seoTitle'] ?? $existing['seoTitle'] ?? null,
+                $data['seoDescription'] ?? $existing['seoDescription'] ?? null,
+                $data['seoKeywords'] ?? $existing['seoKeywords'] ?? null,
                 isset($data['isPublished']) ? ($data['isPublished'] ? 1 : 0) : $existing['isPublished'],
                 (isset($data['isPublished']) && $data['isPublished']) 
                     ? ($existing['publishedAt'] ?? date('Y-m-d H:i:s')) 

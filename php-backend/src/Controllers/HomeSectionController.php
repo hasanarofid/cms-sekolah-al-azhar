@@ -22,6 +22,27 @@ class HomeSectionController extends BaseController
                 } else {
                     $section['images'] = [];
                 }
+                // Parse faqItems JSON to array
+                if (isset($section['faqItems']) && $section['faqItems']) {
+                    $decoded = json_decode($section['faqItems'], true);
+                    $section['faqItems'] = $decoded !== null ? $decoded : [];
+                } else {
+                    $section['faqItems'] = [];
+                }
+                // Parse figures JSON to array
+                if (isset($section['figures']) && $section['figures']) {
+                    $decoded = json_decode($section['figures'], true);
+                    $section['figures'] = $decoded !== null ? $decoded : [];
+                } else {
+                    $section['figures'] = [];
+                }
+                // Parse partnerships JSON to array
+                if (isset($section['partnerships']) && $section['partnerships']) {
+                    $decoded = json_decode($section['partnerships'], true);
+                    $section['partnerships'] = $decoded !== null ? $decoded : [];
+                } else {
+                    $section['partnerships'] = [];
+                }
             }
 
             Response::json($sections);
@@ -42,11 +63,23 @@ class HomeSectionController extends BaseController
         $images = isset($data['images']) 
             ? (is_string($data['images']) ? $data['images'] : json_encode($data['images']))
             : null;
+        
+        $faqItems = isset($data['faqItems']) 
+            ? (is_string($data['faqItems']) ? $data['faqItems'] : json_encode($data['faqItems']))
+            : null;
+        
+        $figures = isset($data['figures']) 
+            ? (is_string($data['figures']) ? $data['figures'] : json_encode($data['figures']))
+            : null;
+        
+        $partnerships = isset($data['partnerships']) 
+            ? (is_string($data['partnerships']) ? $data['partnerships'] : json_encode($data['partnerships']))
+            : null;
 
         $this->db->query(
             'INSERT INTO HomeSection (id, type, title, titleEn, subtitle, subtitleEn, content, 
-             contentEn, image, images, videoUrl, buttonText, buttonTextEn, buttonUrl, `order`, isActive) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+             contentEn, image, imageLeft, imageRight, images, videoUrl, buttonText, buttonTextEn, buttonUrl, faqItems, figures, partnerships, `order`, isActive) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $id,
                 $data['type'] ?? '',
@@ -57,11 +90,16 @@ class HomeSectionController extends BaseController
                 $data['content'] ?? null,
                 $data['contentEn'] ?? null,
                 $data['image'] ?? null,
+                $data['imageLeft'] ?? null,
+                $data['imageRight'] ?? null,
                 $images,
                 $data['videoUrl'] ?? null,
                 $data['buttonText'] ?? null,
                 $data['buttonTextEn'] ?? null,
                 $data['buttonUrl'] ?? null,
+                $faqItems,
+                $figures,
+                $partnerships,
                 $data['order'] ?? 0,
                 isset($data['isActive']) ? ($data['isActive'] ? 1 : 0) : 1,
             ]
@@ -70,6 +108,21 @@ class HomeSectionController extends BaseController
         $section = $this->db->fetchOne('SELECT * FROM HomeSection WHERE id = ?', [$id]);
         if ($section['images']) {
             $section['images'] = json_decode($section['images'], true);
+        }
+        if (isset($section['faqItems']) && $section['faqItems']) {
+            $section['faqItems'] = json_decode($section['faqItems'], true);
+        } else {
+            $section['faqItems'] = [];
+        }
+        if (isset($section['figures']) && $section['figures']) {
+            $section['figures'] = json_decode($section['figures'], true);
+        } else {
+            $section['figures'] = [];
+        }
+        if (isset($section['partnerships']) && $section['partnerships']) {
+            $section['partnerships'] = json_decode($section['partnerships'], true);
+        } else {
+            $section['partnerships'] = [];
         }
         Response::json($section);
     }
@@ -88,6 +141,27 @@ class HomeSectionController extends BaseController
             $section['images'] = $decoded !== null ? $decoded : [];
         } else {
             $section['images'] = [];
+        }
+        // Decode faqItems JSON to array
+        if (isset($section['faqItems']) && $section['faqItems']) {
+            $decoded = json_decode($section['faqItems'], true);
+            $section['faqItems'] = $decoded !== null ? $decoded : [];
+        } else {
+            $section['faqItems'] = [];
+        }
+        // Decode figures JSON to array
+        if (isset($section['figures']) && $section['figures']) {
+            $decoded = json_decode($section['figures'], true);
+            $section['figures'] = $decoded !== null ? $decoded : [];
+        } else {
+            $section['figures'] = [];
+        }
+        // Decode partnerships JSON to array
+        if (isset($section['partnerships']) && $section['partnerships']) {
+            $decoded = json_decode($section['partnerships'], true);
+            $section['partnerships'] = $decoded !== null ? $decoded : [];
+        } else {
+            $section['partnerships'] = [];
         }
 
         Response::json($section);
@@ -110,11 +184,23 @@ class HomeSectionController extends BaseController
         $images = isset($data['images']) 
             ? (is_string($data['images']) ? $data['images'] : json_encode($data['images']))
             : $existing['images'];
+        
+        $faqItems = isset($data['faqItems']) 
+            ? (is_string($data['faqItems']) ? $data['faqItems'] : json_encode($data['faqItems']))
+            : ($existing['faqItems'] ?? null);
+        
+        $figures = isset($data['figures']) 
+            ? (is_string($data['figures']) ? $data['figures'] : json_encode($data['figures']))
+            : ($existing['figures'] ?? null);
+        
+        $partnerships = isset($data['partnerships']) 
+            ? (is_string($data['partnerships']) ? $data['partnerships'] : json_encode($data['partnerships']))
+            : ($existing['partnerships'] ?? null);
 
         $this->db->query(
             'UPDATE HomeSection SET type = ?, title = ?, titleEn = ?, subtitle = ?, subtitleEn = ?, 
-             content = ?, contentEn = ?, image = ?, images = ?, videoUrl = ?, buttonText = ?, 
-             buttonTextEn = ?, buttonUrl = ?, `order` = ?, isActive = ? WHERE id = ?',
+             content = ?, contentEn = ?, image = ?, imageLeft = ?, imageRight = ?, images = ?, videoUrl = ?, buttonText = ?, 
+             buttonTextEn = ?, buttonUrl = ?, faqItems = ?, figures = ?, partnerships = ?, `order` = ?, isActive = ? WHERE id = ?',
             [
                 $data['type'] ?? $existing['type'],
                 $data['title'] ?? $existing['title'],
@@ -124,11 +210,16 @@ class HomeSectionController extends BaseController
                 $data['content'] ?? $existing['content'],
                 $data['contentEn'] ?? $existing['contentEn'],
                 $data['image'] ?? $existing['image'],
+                $data['imageLeft'] ?? $existing['imageLeft'],
+                $data['imageRight'] ?? $existing['imageRight'],
                 $images,
                 $data['videoUrl'] ?? $existing['videoUrl'],
                 $data['buttonText'] ?? $existing['buttonText'],
                 $data['buttonTextEn'] ?? $existing['buttonTextEn'],
                 $data['buttonUrl'] ?? $existing['buttonUrl'],
+                $faqItems,
+                $figures,
+                $partnerships,
                 $data['order'] ?? $existing['order'],
                 isset($data['isActive']) ? ($data['isActive'] ? 1 : 0) : $existing['isActive'],
                 $id,
@@ -142,6 +233,13 @@ class HomeSectionController extends BaseController
             $section['images'] = $decoded !== null ? $decoded : [];
         } else {
             $section['images'] = [];
+        }
+        // Decode partnerships JSON to array
+        if (isset($section['partnerships']) && $section['partnerships']) {
+            $decoded = json_decode($section['partnerships'], true);
+            $section['partnerships'] = $decoded !== null ? $decoded : [];
+        } else {
+            $section['partnerships'] = [];
         }
         Response::json($section);
     }
