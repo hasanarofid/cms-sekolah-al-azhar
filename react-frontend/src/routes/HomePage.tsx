@@ -10,6 +10,7 @@ import { FiguresSection } from '../components/FiguresSection'
 import { PartnershipsSection } from '../components/PartnershipsSection'
 import { apiClient } from '../lib/api-client'
 import { useSettings } from '../lib/use-settings'
+import { useSEO } from '../lib/use-seo'
 import { ArrowRight } from 'lucide-react'
 
 export default function HomePage() {
@@ -24,16 +25,20 @@ export default function HomePage() {
   const [figures, setFigures] = useState<any[]>([])
   const [partnerships, setPartnerships] = useState<any[]>([])
   const [settings, setSettings] = useState<any>({})
+  const [seo, setSeo] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeVideo, setActiveVideo] = useState<{ sectionId: string; videoId: string } | null>(null)
 
   // Apply settings (favicon, title) ke document
   useSettings(settings)
+  
+  // Apply SEO meta tags
+  useSEO(seo, settings.website_title?.value || 'SMA AL AZHAR INSAN CENDEKIA JATIBENING')
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [menusData, postsData, slidersData, homeSectionsData, faqsData, figuresData, partnershipsData, settingsData] = await Promise.all([
+        const [menusData, postsData, slidersData, homeSectionsData, faqsData, figuresData, partnershipsData, settingsData, seoData] = await Promise.all([
           apiClient.get('/admin/menus'),
           apiClient.get('/admin/posts'),
           apiClient.get('/admin/sliders'),
@@ -46,6 +51,7 @@ export default function HomePage() {
             s.forEach((item: any) => { obj[item.key] = item })
             return obj
           }),
+          apiClient.get('/admin/seo?pageType=global', false).catch(() => null),
         ])
 
         // Filter menus
@@ -98,6 +104,7 @@ export default function HomePage() {
         setFigures(figuresData)
         setPartnerships(partnershipsData)
         setSettings(settingsData)
+        setSeo(seoData)
       } catch (error) {
         console.error('Error loading data:', error)
       } finally {
@@ -256,7 +263,7 @@ export default function HomePage() {
       <FiguresSection 
         figures={figures} 
         locale={locale}
-        sectionTitle={settings.figures_section_title?.value || 'Tokoh-Tokoh Al Azhar IIBS'}
+        sectionTitle={settings.figures_section_title?.value || 'Tokoh-Tokoh SMA AL AZHAR INSAN CENDEKIA JATIBENING'}
         sectionTitleEn={settings.figures_section_title_en?.value || undefined}
         backgroundImage={settings.figures_section_background?.value || undefined}
       />

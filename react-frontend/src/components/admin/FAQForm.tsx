@@ -153,7 +153,7 @@ export function FAQForm({ faq }: FAQFormProps) {
           {...register('question')}
           type="text"
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          placeholder="Apa Program Unggulan Al Azhar IIBS?"
+          placeholder="Apa Program Unggulan SMA AL AZHAR INSAN CENDEKIA JATIBENING?"
         />
         {errors.question && (
           <p className="mt-1 text-sm text-red-600">{errors.question.message}</p>
@@ -168,7 +168,7 @@ export function FAQForm({ faq }: FAQFormProps) {
           {...register('questionEn')}
           type="text"
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          placeholder="What are Al Azhar IIBS's Flagship Programs?"
+          placeholder="What are SMA AL AZHAR INSAN CENDEKIA JATIBENING's Flagship Programs?"
         />
       </div>
 

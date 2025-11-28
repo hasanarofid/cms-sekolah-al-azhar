@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronRight,
   Layout,
+  Search,
   // GraduationCap,
   // School
 } from 'lucide-react'
@@ -116,6 +117,11 @@ const menuItems: MenuItem[] = [
   //   href: '/admin/media',
   //   icon: <Image size={20} />,
   // },
+  {
+    title: 'SEO',
+    href: '/admin/seo',
+    icon: <Search size={20} />,
+  },
   {
     title: 'Pengaturan',
     href: '/admin/settings',

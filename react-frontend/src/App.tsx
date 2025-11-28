@@ -28,6 +28,7 @@ import PostEditPage from './routes/admin/PostEditPage'
 import MenusPage from './routes/admin/MenusPage'
 import CategoriesPage from './routes/admin/CategoriesPage'
 import SettingsPage from './routes/admin/SettingsPage'
+import SEOPage from './routes/admin/SEOPage'
 import PlaceholderPage from './routes/admin/PlaceholderPage'
 import NotFound from './routes/NotFound'
 import './index.css'
@@ -69,6 +70,7 @@ function App() {
         <Route path="/admin/menus" element={<MenusPage />} />
         <Route path="/admin/categories" element={<CategoriesPage />} />
         <Route path="/admin/settings" element={<SettingsPage />} />
+        <Route path="/admin/seo" element={<SEOPage />} />
         <Route path="/admin/split-screens" element={<SplitScreensPage />} />
         <Route path="/admin/masjid-al-fatih" element={<PlaceholderPage title="Masjid AL FATIH" />} />
         <Route path="/admin/university-maps" element={<PlaceholderPage title="University Map" />} />

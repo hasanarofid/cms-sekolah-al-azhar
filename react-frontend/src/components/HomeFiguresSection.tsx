@@ -42,7 +42,7 @@ export function HomeFiguresSection({ section, locale = 'id' }: HomeFiguresSectio
 
   if (figures.length === 0) return null
 
-  const displayTitle = locale === 'en' && section.titleEn ? section.titleEn : (section.title || 'Tokoh-Tokoh Al Azhar IIBS')
+  const displayTitle = locale === 'en' && section.titleEn ? section.titleEn : (section.title || 'Tokoh-Tokoh SMA AL AZHAR INSAN CENDEKIA JATIBENING')
 
   return (
     <section 

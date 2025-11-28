@@ -198,7 +198,7 @@ model Figure {
   id            String    @id @default(cuid())
   name          String
   nameEn        String?
-  position      String    // Role/position (e.g., "ADVISORY BOARD AL AZHAR IIBS")
+  position      String    // Role/position (e.g., "ADVISORY BOARD SMA AL AZHAR INSAN CENDEKIA JATIBENING")
   positionEn    String?
   image         String    // Photo of the figure
   order         Int       @default(0)

@@ -9,6 +9,7 @@ import { PageSections } from '../components/PageSections'
 import { apiClient } from '../lib/api-client'
 import { getImageUrl } from '../lib/utils-image-url'
 import { useSettings } from '../lib/use-settings'
+import { useSEO } from '../lib/use-seo'
 
 export default function DynamicPage() {
   const params = useParams()
@@ -21,10 +22,14 @@ export default function DynamicPage() {
   const [category, setCategory] = useState<any>(null)
   const [menus, setMenus] = useState<any[]>([])
   const [settings, setSettings] = useState<any>({})
+  const [seo, setSeo] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   // Apply settings (favicon, title) ke document
   useSettings(settings)
+  
+  // Apply SEO meta tags
+  useSEO(seo, page?.title || category?.name || settings.website_title?.value || 'Halaman')
 
   useEffect(() => {
     async function loadData() {
@@ -45,12 +50,41 @@ export default function DynamicPage() {
 
         if (foundPage) {
           try {
-            // Load blocks, heroes, and sections
-            const [blocks, heroesData, sections] = await Promise.all([
+            // Load blocks, heroes, sections, and SEO
+            const [blocks, heroesData, sections, seoDataRaw] = await Promise.all([
               apiClient.get(`/admin/pages/${foundPage.id}/blocks`).catch(() => []),
               apiClient.get(`/admin/pages/${foundPage.id}/hero`).catch(() => []),
-              apiClient.get(`/admin/pages/${foundPage.id}/sections`).catch(() => [])
+              apiClient.get(`/admin/pages/${foundPage.id}/sections`).catch(() => []),
+              apiClient.get(`/admin/seo?pageType=page&pageId=${foundPage.id}`, false).catch(() => 
+                apiClient.get('/admin/seo?pageType=global', false).catch(() => null)
+              ),
             ])
+            
+            // Merge page data with SEO
+            let seoData: any
+            if (seoDataRaw) {
+              seoData = {
+                ...seoDataRaw,
+                title: seoDataRaw.title || foundPage.seoTitle || foundPage.title,
+                description: seoDataRaw.description || foundPage.seoDescription || foundPage.excerpt || foundPage.content?.substring(0, 160),
+                image: seoDataRaw.image || foundPage.featuredImage,
+                ogTitle: seoDataRaw.ogTitle || foundPage.seoTitle || foundPage.title,
+                ogDescription: seoDataRaw.ogDescription || foundPage.seoDescription || foundPage.excerpt || foundPage.content?.substring(0, 200),
+                ogImage: seoDataRaw.ogImage || foundPage.featuredImage,
+              }
+            } else {
+              // Create SEO from page data
+              seoData = {
+                title: foundPage.seoTitle || foundPage.title,
+                description: foundPage.seoDescription || foundPage.excerpt || foundPage.content?.substring(0, 160),
+                keywords: foundPage.seoKeywords,
+                image: foundPage.featuredImage,
+                ogTitle: foundPage.seoTitle || foundPage.title,
+                ogDescription: foundPage.seoDescription || foundPage.excerpt || foundPage.content?.substring(0, 200),
+                ogImage: foundPage.featuredImage,
+                ogType: 'website',
+              }
+            }
             
             // Ensure blocks have valid data structure
             const validBlocks = (Array.isArray(blocks) ? blocks : []).map((b: any) => {
@@ -82,6 +116,8 @@ export default function DynamicPage() {
             console.log('Loaded blocks for page:', foundPage.id, 'Blocks:', validBlocks.length, 'Heroes:', heroes.length, 'Sections:', processedSections.length)
             console.log('Sections data:', processedSections)
             console.log('Video-profile sections:', processedSections.filter((s: any) => s.type === 'video-profile'))
+            
+            setSeo(seoData)
           } catch (error) {
             console.error('Error loading blocks:', error)
             foundPage.blocks = []
@@ -95,6 +131,28 @@ export default function DynamicPage() {
           )
           foundCategory.posts = posts
           setCategory(foundCategory)
+          
+          // Load SEO for category
+          try {
+            const categorySeo = await apiClient.get(`/admin/seo?pageType=category&pageSlug=${slug}`, false).catch(() => 
+              apiClient.get('/admin/seo?pageType=global', false).catch(() => null)
+            )
+            if (categorySeo) {
+              categorySeo.title = categorySeo.title || foundCategory.name
+              categorySeo.description = categorySeo.description || foundCategory.description || foundCategory.descriptionEn
+            } else {
+              setSeo({
+                title: foundCategory.name,
+                description: foundCategory.description || foundCategory.descriptionEn,
+                ogType: 'website',
+              })
+            }
+            if (categorySeo) setSeo(categorySeo)
+          } catch {
+            // Use global SEO as fallback
+            const globalSeo = await apiClient.get('/admin/seo?pageType=global', false).catch(() => null)
+            if (globalSeo) setSeo(globalSeo)
+          }
         } else {
           navigate('/404')
           return

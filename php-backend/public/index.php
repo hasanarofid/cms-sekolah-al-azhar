@@ -241,6 +241,13 @@ $routes = [
     'api/admin/settings/([a-zA-Z0-9_-]+)' => 'SettingController@show',
     'api/admin/settings/([a-zA-Z0-9_-]+)/update' => 'SettingController@update',
     
+    // Admin - SEO
+    'api/admin/seo' => 'SEOController@index',
+    'api/admin/seo/create' => 'SEOController@create',
+    'api/admin/seo/([a-zA-Z0-9_-]+)' => 'SEOController@show',
+    'api/admin/seo/([a-zA-Z0-9_-]+)/update' => 'SEOController@update',
+    'api/admin/seo/([a-zA-Z0-9_-]+)/delete' => 'SEOController@delete',
+    
     // Admin - Upload
     'api/admin/upload' => 'UploadController@upload',
     
@@ -296,7 +303,7 @@ foreach ($routes as $pattern => $handler) {
             // Validate blockId is not the same as pageId
             if ($blockId === $pageId) {
                 error_log("PageBlockController routing - ERROR: blockId sama dengan pageId! pageId: " . $pageId . ", blockId: " . $blockId);
-                Response::error('Invalid request: Block ID sama dengan Page ID. Block ID: ' . $blockId . ', Page ID: ' . $pageId, 400);
+                App\Response::error('Invalid request: Block ID sama dengan Page ID. Block ID: ' . $blockId . ', Page ID: ' . $pageId, 400);
                 exit;
             }
             

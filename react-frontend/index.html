@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
@@ -7,7 +7,180 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    <title>Al Azhar IIBS</title>
+    
+    <!-- Default SEO Meta Tags (will be updated by script below) -->
+    <title>SMA AL AZHAR INSAN CENDEKIA JATIBENING</title>
+    <meta name="description" content="Menjadi Sekolah Menengah Atas yang unggul dalam membina generasi Qur'ani,
+berprestasi, dan berwawasan global, dengan mengintegrasikan nilai-nilai Islam dan Al-
+Qur'an dalam pengembangan ilmu pengetahuan, sains, dan teknologi." />
+    <meta name="keywords" content="al azhar, boarding school, islamic school, pendidikan islam" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="SMA AL AZHAR INSAN CENDEKIA JATIBENING" />
+    <meta property="og:description" content="Menjadi Sekolah Menengah Atas yang unggul dalam membina generasi Qur'ani,
+berprestasi, dan berwawasan global, dengan mengintegrasikan nilai-nilai Islam dan Al-
+Qur'an dalam pengembangan ilmu pengetahuan, sains, dan teknologi." />
+    <meta property="og:url" content="https://aicjatibening.com/" />
+    <meta property="og:site_name" content="SMA AL AZHAR INSAN CENDEKIA JATIBENING" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SMA AL AZHAR INSAN CENDEKIA JATIBENING" />
+    <meta name="twitter:description" content="Menjadi Sekolah Menengah Atas yang unggul dalam membina generasi Qur'ani,
+berprestasi, dan berwawasan global, dengan mengintegrasikan nilai-nilai Islam dan Al-
+Qur'an dalam pengembangan ilmu pengetahuan, sains, dan teknologi." />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://aicjatibening.com/" />
+    
+    <!-- Script to fetch and inject SEO meta tags before React loads -->
+    <script>
+      (function() {
+        // Get API URL - use current origin for API
+        const API_URL = window.location.origin + '/api';
+        const currentPath = window.location.pathname;
+        
+        // Determine page type based on path
+        let pageType = 'global';
+        let pageId = null;
+        let pageSlug = null;
+        
+        if (currentPath === '/' || currentPath === '') {
+          pageType = 'global';
+        } else if (currentPath.startsWith('/berita/')) {
+          pageType = 'post';
+          pageSlug = currentPath.replace('/berita/', '');
+        } else if (currentPath !== '/kontak' && currentPath !== '/login') {
+          pageType = 'page';
+          pageSlug = currentPath.replace(/^\//, '');
+        }
+        
+        // Function to update meta tag
+        function updateMetaTag(attribute, key, value) {
+          if (!value) return;
+          let meta = document.querySelector('meta[' + attribute + '="' + key + '"]');
+          if (!meta) {
+            meta = document.createElement('meta');
+            meta.setAttribute(attribute, key);
+            document.head.appendChild(meta);
+          }
+          meta.setAttribute('content', value);
+        }
+        
+        // Function to update link tag
+        function updateLinkTag(rel, href) {
+          if (!href) return;
+          let link = document.querySelector('link[rel="' + rel + '"]');
+          if (!link) {
+            link = document.createElement('link');
+            link.setAttribute('rel', rel);
+            document.head.appendChild(link);
+          }
+          link.setAttribute('href', href);
+        }
+        
+        // Function to get full image URL
+        function getImageUrl(imagePath) {
+          if (!imagePath) return '';
+          if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+            return imagePath;
+          }
+          const baseUrl = window.location.origin;
+          return imagePath.startsWith('/') ? baseUrl + imagePath : baseUrl + '/' + imagePath;
+        }
+        
+        // Fetch SEO data
+        let seoUrl = API_URL + '/admin/seo?pageType=' + pageType;
+        if (pageId) seoUrl += '&pageId=' + pageId;
+        if (pageSlug) seoUrl += '&pageSlug=' + encodeURIComponent(pageSlug);
+        
+        fetch(seoUrl)
+          .then(function(response) {
+            if (!response.ok) throw new Error('Failed to fetch SEO');
+            return response.json();
+          })
+          .then(function(seoData) {
+            if (!seoData) return;
+            
+            const currentUrl = window.location.href;
+            
+            // Update meta tags
+            if (seoData.title) {
+              document.title = seoData.title;
+              updateMetaTag('property', 'og:title', seoData.title);
+              updateMetaTag('name', 'twitter:title', seoData.title);
+            }
+            
+            if (seoData.description) {
+              updateMetaTag('name', 'description', seoData.description);
+              updateMetaTag('property', 'og:description', seoData.description);
+              updateMetaTag('name', 'twitter:description', seoData.description);
+            }
+            
+            if (seoData.keywords) {
+              updateMetaTag('name', 'keywords', seoData.keywords);
+            }
+            
+            if (seoData.author) {
+              updateMetaTag('name', 'author', seoData.author);
+            }
+            
+            if (seoData.robots) {
+              updateMetaTag('name', 'robots', seoData.robots);
+            }
+            
+            // Update images
+            const imageUrl = seoData.ogImage ? getImageUrl(seoData.ogImage) : (seoData.image ? getImageUrl(seoData.image) : '');
+            if (imageUrl) {
+              updateMetaTag('property', 'og:image', imageUrl);
+              updateMetaTag('name', 'twitter:image', imageUrl);
+            }
+            
+            // Update Open Graph
+            if (seoData.ogType) {
+              updateMetaTag('property', 'og:type', seoData.ogType);
+            }
+            
+            if (seoData.ogSiteName) {
+              updateMetaTag('property', 'og:site_name', seoData.ogSiteName);
+            }
+            
+            if (seoData.ogUrl) {
+              updateMetaTag('property', 'og:url', seoData.ogUrl);
+            } else {
+              updateMetaTag('property', 'og:url', currentUrl);
+            }
+            
+            // Update Twitter Cards
+            if (seoData.twitterCard) {
+              updateMetaTag('name', 'twitter:card', seoData.twitterCard);
+            }
+            
+            if (seoData.twitterSite) {
+              const twitterSite = seoData.twitterSite.startsWith('@') ? seoData.twitterSite : '@' + seoData.twitterSite;
+              updateMetaTag('name', 'twitter:site', twitterSite);
+            }
+            
+            if (seoData.twitterCreator) {
+              const twitterCreator = seoData.twitterCreator.startsWith('@') ? seoData.twitterCreator : '@' + seoData.twitterCreator;
+              updateMetaTag('name', 'twitter:creator', twitterCreator);
+            }
+            
+            // Update canonical
+            if (seoData.canonical) {
+              updateLinkTag('canonical', seoData.canonical);
+            } else {
+              updateLinkTag('canonical', currentUrl);
+            }
+          })
+          .catch(function(error) {
+            console.error('Error loading SEO:', error);
+            // Keep default meta tags if fetch fails
+          });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

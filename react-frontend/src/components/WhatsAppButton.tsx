@@ -13,7 +13,7 @@ export function WhatsAppButton({ phoneNumber, defaultMessage }: WhatsAppButtonPr
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    setMessage(defaultMessage || 'Assalamualaikum Al Azhar IIBS\nMohon info lebih lanjut untuk pendaftaran murid baru\nTerima Kasih')
+    setMessage(defaultMessage || 'Assalamualaikum SMA AL AZHAR INSAN CENDEKIA JATIBENING\nMohon info lebih lanjut untuk pendaftaran murid baru\nTerima Kasih')
   }, [defaultMessage])
 
   if (!phoneNumber) return null

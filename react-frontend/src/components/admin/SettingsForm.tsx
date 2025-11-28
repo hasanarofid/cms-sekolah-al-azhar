@@ -42,15 +42,15 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       newsQuoteEn: settings.news_section_quote?.valueEn || '',
       newsTitle: settings.news_section_title?.value || 'Berita Terbaru',
       newsTitleEn: settings.news_section_title?.valueEn || 'Latest News',
-      figuresTitle: settings.figures_section_title?.value || 'Tokoh-Tokoh Al Azhar IIBS',
-      figuresTitleEn: settings.figures_section_title_en?.value || 'Figures of Al Azhar IIBS',
+      figuresTitle: settings.figures_section_title?.value || 'Tokoh-Tokoh SMA AL AZHAR INSAN CENDEKIA JATIBENING',
+      figuresTitleEn: settings.figures_section_title_en?.value || 'Figures of SMA AL AZHAR INSAN CENDEKIA JATIBENING',
       figuresBackground: settings.figures_section_background?.value || '',
       websiteLogo: settings.website_logo?.value || '',
       websiteFavicon: settings.website_favicon?.value || '',
       websiteTitle: settings.website_title?.value || '',
       showWebsiteName: settings.show_website_name?.value === 'true' || false,
       whatsappPhone: settings.whatsapp_phone?.value || '',
-      whatsappMessage: settings.whatsapp_message?.value || 'Assalamualaikum Al Azhar IIBS\nMohon info lebih lanjut untuk pendaftaran murid baru\nTerima Kasih',
+      whatsappMessage: settings.whatsapp_message?.value || 'Assalamualaikum SMA AL AZHAR INSAN CENDEKIA JATIBENING\nMohon info lebih lanjut untuk pendaftaran murid baru\nTerima Kasih',
       footerAddress: settings.footer_address?.value || 'Jl. Raya Solo - Tawangmangu, Gedangan, Salam, Kec. Karangpandan, Kabupaten Karanganyar, Jawa Tengah 57791',
       footerPhone: settings.footer_phone?.value || '0811 2020 101',
       footerEmail: settings.footer_email?.value || 'aaiibs@alazhariibs.sch.id',
@@ -352,7 +352,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
               {...register('websiteTitle', { required: true })}
               type="text"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Al Azhar IIBS"
+              placeholder="SMA AL AZHAR INSAN CENDEKIA JATIBENING"
             />
             <p className="mt-1 text-xs text-gray-500">Title website yang akan ditampilkan di browser tab</p>
           </div>
@@ -502,7 +502,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
               {...register('figuresTitle', { required: true })}
               type="text"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Tokoh-Tokoh Al Azhar IIBS"
+              placeholder="Tokoh-Tokoh SMA AL AZHAR INSAN CENDEKIA JATIBENING"
             />
           </div>
 
@@ -514,7 +514,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
               {...register('figuresTitleEn')}
               type="text"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Figures of Al Azhar IIBS"
+              placeholder="Figures of SMA AL AZHAR INSAN CENDEKIA JATIBENING"
             />
           </div>
 

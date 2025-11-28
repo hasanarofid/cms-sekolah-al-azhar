@@ -22,7 +22,7 @@ interface FiguresSectionProps {
 export function FiguresSection({ figures, locale = 'id', sectionTitle, sectionTitleEn, backgroundImage }: FiguresSectionProps) {
   if (figures.length === 0) return null
 
-  const displayTitle = locale === 'en' && sectionTitleEn ? sectionTitleEn : (sectionTitle || 'Tokoh-Tokoh Al Azhar IIBS')
+  const displayTitle = locale === 'en' && sectionTitleEn ? sectionTitleEn : (sectionTitle || 'Tokoh-Tokoh SMA AL AZHAR INSAN CENDEKIA JATIBENING')
 
   return (
     <section 

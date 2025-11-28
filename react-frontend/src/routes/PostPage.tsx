@@ -5,6 +5,7 @@ import { Footer } from '../components/Footer'
 import { WhatsAppButton } from '../components/WhatsAppButton'
 import { apiClient } from '../lib/api-client'
 import { useSettings } from '../lib/use-settings'
+import { useSEO } from '../lib/use-seo'
 import { getImageUrl } from '../lib/utils-image-url'
 import { Search, ChevronRight } from 'lucide-react'
 
@@ -18,15 +19,19 @@ export default function PostPage() {
   const [post, setPost] = useState<any>(null)
   const [menus, setMenus] = useState<any[]>([])
   const [settings, setSettings] = useState<any>({})
+  const [seo, setSeo] = useState<any>(null)
   const [latestPosts, setLatestPosts] = useState<any[]>([])
   const [nextPost, setNextPost] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   // Apply settings (favicon, title) ke document
   useSettings(settings)
+  
+  // Apply SEO meta tags - use post SEO if available, otherwise global
+  useSEO(seo, post?.title || settings.website_title?.value || 'Berita')
 
   useEffect(() => {
-    async function loadData() {
+      async function loadData() {
       try {
         const [postData, menusData, settingsData, postsData] = await Promise.all([
           apiClient.get(`/admin/posts`).then((posts: any[]) => posts.find((p: any) => p.slug === slug && p.isPublished)),
@@ -38,6 +43,42 @@ export default function PostPage() {
           }),
           apiClient.get('/admin/posts').then((posts: any[]) => posts.filter((p: any) => p.isPublished)),
         ])
+        
+        // Load SEO for this post
+        let seoData = null
+        if (postData) {
+          try {
+            // Try to get post-specific SEO
+            seoData = await apiClient.get(`/admin/seo?pageType=post&pageId=${postData.id}`, false)
+          } catch {
+            // Fallback to global SEO
+            seoData = await apiClient.get('/admin/seo?pageType=global', false).catch(() => null)
+          }
+          
+          // Merge post data with SEO
+          if (seoData) {
+            seoData = {
+              ...seoData,
+              title: seoData.title || postData.title,
+              description: seoData.description || postData.excerpt || postData.content?.substring(0, 160),
+              image: seoData.image || postData.featuredImage,
+              ogTitle: seoData.ogTitle || postData.title,
+              ogDescription: seoData.ogDescription || postData.excerpt || postData.content?.substring(0, 200),
+              ogImage: seoData.ogImage || postData.featuredImage,
+            }
+          } else {
+            // Create SEO from post data
+            seoData = {
+              title: postData.title,
+              description: postData.excerpt || postData.content?.substring(0, 160),
+              image: postData.featuredImage,
+              ogTitle: postData.title,
+              ogDescription: postData.excerpt || postData.content?.substring(0, 200),
+              ogImage: postData.featuredImage,
+              ogType: 'article',
+            }
+          }
+        }
 
         if (!postData) {
           navigate('/404')
@@ -54,6 +95,7 @@ export default function PostPage() {
         setNextPost(currentIndex > 0 ? publishedPosts[currentIndex - 1] : null)
         setLatestPosts(publishedPosts.filter((p: any) => p.id !== postData.id).slice(0, 5))
         setSettings(settingsData)
+        setSeo(seoData)
       } catch (error) {
         console.error('Error loading data:', error)
       } finally {
