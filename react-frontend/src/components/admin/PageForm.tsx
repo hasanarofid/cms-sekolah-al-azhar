@@ -7,6 +7,7 @@ import { slugify } from '../../lib/utils'
 import { getImageUrl } from '../../lib/utils-image-url'
 import { PageBlocksManager } from './PageBlocksManager'
 import { RichTextEditor } from './RichTextEditor'
+import { Select2 } from './Select2'
 
 interface Page {
   id: string
@@ -222,15 +223,19 @@ export function PageForm({ page, menus = [] }: PageFormProps) {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Tipe Halaman
             </label>
-            <select
-              {...register('pageType')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            >
-              <option value="standard">Standard</option>
-              <option value="program">Program</option>
-              <option value="facility">Fasilitas</option>
-              <option value="academic">Akademik</option>
-            </select>
+            <Select2
+              name="pageType"
+              value={watch('pageType')}
+              onChange={(value: string) => setValue('pageType', value as any)}
+              options={[
+                { value: 'standard', label: 'Standard' },
+                { value: 'program', label: 'Program' },
+                { value: 'facility', label: 'Fasilitas' },
+                { value: 'academic', label: 'Akademik' },
+              ]}
+              placeholder="Pilih tipe halaman..."
+              isSearchable={false}
+            />
           </div>
         </div>
 
@@ -238,17 +243,20 @@ export function PageForm({ page, menus = [] }: PageFormProps) {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Menu (opsional)
           </label>
-          <select
-            {...register('menuId')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          >
-            <option value="">Tidak ada menu</option>
-            {menus.map((menu) => (
-              <option key={menu.id} value={menu.id}>
-                {menu.title}
-              </option>
-            ))}
-          </select>
+          <Select2
+            name="menuId"
+            value={watch('menuId') || ''}
+            onChange={(value: string) => setValue('menuId', value || undefined)}
+            options={[
+              { value: '', label: 'Tidak ada menu' },
+              ...menus.map((menu) => ({
+                value: menu.id,
+                label: menu.title
+              }))
+            ]}
+            placeholder="Pilih menu..."
+            isSearchable={true}
+          />
         </div>
 
         <div>

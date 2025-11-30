@@ -15,6 +15,8 @@ import { NavigationGridSection } from './NavigationGridSection'
 import { ProgramCardsSection } from './ProgramCardsSection'
 import { FacilityGallerySection } from './FacilityGallerySection'
 import { ExtracurricularDetailSection } from './ExtracurricularDetailSection'
+import { OrganizationStructureSection } from './OrganizationStructureSection'
+import { StudentAchievementsSection } from './StudentAchievementsSection'
 import { parseImages } from '../lib/utils-images'
 import { getImageUrl, getImageUrls } from '../lib/utils-image-url'
 
@@ -550,6 +552,28 @@ export function SectionRenderer({
   if (section.type === 'extracurricular-detail') {
     return (
       <ExtracurricularDetailSection
+        key={section.id}
+        section={section as any}
+        locale={locale}
+      />
+    )
+  }
+
+  // Organization Structure Section
+  if (section.type === 'organization-structure') {
+    return (
+      <OrganizationStructureSection
+        key={section.id}
+        section={section as any}
+        locale={locale}
+      />
+    )
+  }
+
+  // Student Achievements Section
+  if (section.type === 'student-achievements') {
+    return (
+      <StudentAchievementsSection
         key={section.id}
         section={section as any}
         locale={locale}

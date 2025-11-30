@@ -12,9 +12,12 @@ import { NavigationItemsManager } from './NavigationItemsManager'
 import { ProgramItemsManager } from './ProgramItemsManager'
 import { FacilityItemsManager } from './FacilityItemsManager'
 import { ExtracurricularItemsManager } from './ExtracurricularItemsManager'
+import { OrganizationStructureManager } from './OrganizationStructureManager'
+import { StudentAchievementsManager } from './StudentAchievementsManager'
+import { Select2 } from './Select2'
 
 const sectionSchema = z.object({
-  type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'news-section', 'faq', 'accreditation', 'navigation-grid', 'program-cards', 'facility-gallery', 'extracurricular-detail']),
+  type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'news-section', 'faq', 'accreditation', 'navigation-grid', 'program-cards', 'facility-gallery', 'extracurricular-detail', 'organization-structure', 'student-achievements']),
   title: z.string().optional(),
   titleEn: z.string().optional(),
   subtitle: z.string().optional(),
@@ -59,6 +62,36 @@ const sectionSchema = z.object({
     image: z.string(),
     title: z.string(),
     description: z.string(),
+  })).optional(),
+  organizationItems: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    position: z.string(),
+    positionEn: z.string().optional(),
+    image: z.string().optional(),
+    parentId: z.string().nullable().optional(),
+    level: z.number(),
+    order: z.number(),
+  })).optional(),
+  achievementItems: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    titleEn: z.string().optional(),
+    subtitle: z.string().optional(),
+    description: z.string(),
+    descriptionEn: z.string().optional(),
+    competitionName: z.string().optional(),
+    competitionNameEn: z.string().optional(),
+    students: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      image: z.string().optional(),
+      position: z.string().optional(),
+    })),
+    backgroundType: z.enum(['gradient', 'gold', 'blue']).optional(),
+    leftLogo: z.string().optional(),
+    rightLogo: z.string().optional(),
+    order: z.number(),
   })).optional(),
   faqItems: z.array(z.object({
     id: z.string(),
@@ -129,6 +162,8 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
   const [programItems, setProgramItems] = useState<any[]>(parseItems((section as any)?.programItems))
   const [facilityItems, setFacilityItems] = useState<any[]>(parseItems((section as any)?.facilityItems))
   const [extracurricularItems, setExtracurricularItems] = useState<any[]>(parseItems((section as any)?.extracurricularItems))
+  const [organizationItems, setOrganizationItems] = useState<any[]>(parseItems((section as any)?.organizationItems))
+  const [achievementItems, setAchievementItems] = useState<any[]>(parseItems((section as any)?.achievementItems))
   
   const [previewBadgeImage, setPreviewBadgeImage] = useState<string | null>(
     (section as any)?.badgeImage ? getImageUrl((section as any).badgeImage) : null
@@ -165,6 +200,8 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
           programItems: parseItems((section as any)?.programItems),
           facilityItems: parseItems((section as any)?.facilityItems),
           extracurricularItems: parseItems((section as any)?.extracurricularItems),
+          organizationItems: parseItems((section as any)?.organizationItems),
+          achievementItems: parseItems((section as any)?.achievementItems),
           order: section.order ?? 0,
           isActive: section.isActive ?? true,
         }
@@ -326,6 +363,8 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
         programItems: sectionType === 'program-cards' && programItems.length > 0 ? JSON.stringify(programItems) : null,
         facilityItems: sectionType === 'facility-gallery' && facilityItems.length > 0 ? JSON.stringify(facilityItems) : null,
         extracurricularItems: sectionType === 'extracurricular-detail' && extracurricularItems.length > 0 ? JSON.stringify(extracurricularItems) : null,
+        organizationItems: sectionType === 'organization-structure' && organizationItems.length > 0 ? JSON.stringify(organizationItems) : null,
+        achievementItems: sectionType === 'student-achievements' && achievementItems.length > 0 ? JSON.stringify(achievementItems) : null,
         faqItems: sectionType === 'faq' && faqItems.length > 0 ? JSON.stringify(faqItems) : null,
         order: data.order || 0,
         isActive: data.isActive !== undefined ? data.isActive : true,
@@ -373,29 +412,35 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Tipe Section *
         </label>
-        <select
-          {...register('type')}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-        >
-          <option value="motto">Motto</option>
-          <option value="video-profile">Video Profile</option>
-          <option value="admission">Admission (Penerimaan)</option>
-          <option value="split-screen">Split Screen (Yellow Background)</option>
-          <option value="masjid-al-fatih">Masjid AL FATIH</option>
-          <option value="university-map">University Map (Peta Universitas)</option>
-          <option value="global-stage">Global Stage (International Program)</option>
-          <option value="feature">Feature</option>
-          <option value="news-section">News Section (Berita)</option>
-          <option value="faq">FAQ Section</option>
-          <option value="accreditation">Accreditation (Akreditasi)</option>
-          <option value="navigation-grid">Navigation Grid (Grid Navigasi)</option>
-          <option value="program-cards">Program Cards (Kartu Program)</option>
-          <option value="facility-gallery">Facility Gallery (Galeri Fasilitas)</option>
-          <option value="extracurricular-detail">Extracurricular Detail (Detail Ekstrakurikuler)</option>
-        </select>
-        {errors.type && (
-          <p className="mt-1 text-sm text-red-600">{errors.type.message}</p>
-        )}
+        <Select2
+          name="type"
+          value={sectionType}
+          onChange={(value) => {
+            setValue('type', value as any, { shouldValidate: true })
+          }}
+          options={[
+            { value: 'motto', label: 'Motto' },
+            { value: 'video-profile', label: 'Video Profile' },
+            { value: 'admission', label: 'Admission (Penerimaan)' },
+            { value: 'split-screen', label: 'Split Screen (Yellow Background)' },
+            { value: 'masjid-al-fatih', label: 'Masjid AL FATIH' },
+            { value: 'university-map', label: 'University Map (Peta Universitas)' },
+            { value: 'global-stage', label: 'Global Stage (International Program)' },
+            { value: 'feature', label: 'Feature' },
+            { value: 'news-section', label: 'News Section (Berita)' },
+            { value: 'faq', label: 'FAQ Section' },
+            { value: 'accreditation', label: 'Accreditation (Akreditasi)' },
+            { value: 'navigation-grid', label: 'Navigation Grid (Grid Navigasi)' },
+            { value: 'program-cards', label: 'Program Cards (Kartu Program)' },
+            { value: 'facility-gallery', label: 'Facility Gallery (Galeri Fasilitas)' },
+            { value: 'extracurricular-detail', label: 'Extracurricular Detail (Detail Ekstrakurikuler)' },
+            { value: 'organization-structure', label: 'Organization Structure (Struktur Organisasi)' },
+            { value: 'student-achievements', label: 'Student Achievements (Prestasi Siswa)' },
+          ]}
+          placeholder="Pilih tipe section..."
+          isSearchable={true}
+          error={errors.type?.message}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -601,6 +646,28 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
           onChange={(items) => {
             setFacilityItems(items)
             setValue('facilityItems', items, { shouldValidate: true })
+          }}
+        />
+      )}
+
+      {/* Organization Structure Items Manager */}
+      {sectionType === 'organization-structure' && (
+        <OrganizationStructureManager
+          value={organizationItems}
+          onChange={(items) => {
+            setOrganizationItems(items)
+            setValue('organizationItems', items, { shouldValidate: true })
+          }}
+        />
+      )}
+
+      {/* Student Achievements Items Manager */}
+      {sectionType === 'student-achievements' && (
+        <StudentAchievementsManager
+          value={achievementItems}
+          onChange={(items) => {
+            setAchievementItems(items)
+            setValue('achievementItems', items, { shouldValidate: true })
           }}
         />
       )}

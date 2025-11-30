@@ -11,6 +11,7 @@ import { getImageUrl } from '../../lib/utils-image-url'
 import { FAQItemsManager } from './FAQItemsManager'
 import { FiguresItemsManager } from './FiguresItemsManager'
 import { PartnershipsItemsManager } from './PartnershipsItemsManager'
+import { Select2 } from './Select2'
 
 const sectionSchema = z.object({
   type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'faq', 'figures', 'partnerships', 'news-section']),
@@ -200,7 +201,7 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
         },
   } as any)
 
-  const sectionType = watch('type')
+  const sectionType = watch('type') as string
   const watchedImages = watch('images')
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -432,26 +433,30 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Tipe Section *
         </label>
-        <select
-          {...register('type')}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-        >
-          <option value="motto">Motto</option>
-          <option value="video-profile">Video Profile</option>
-          <option value="admission">Admission (Penerimaan)</option>
-          <option value="split-screen">Split Screen (Yellow Background)</option>
-          <option value="masjid-al-fatih">Masjid AL FATIH</option>
-          <option value="university-map">University Map (Peta Universitas)</option>
-          <option value="global-stage">Global Stage (International Program)</option>
-          <option value="feature">Feature</option>
-          <option value="faq">FAQ Section</option>
-          <option value="figures">Figures / Tokoh-Tokoh</option>
-          <option value="partnerships">Partnerships / Kerjasama</option>
-          <option value="news-section">News Section (Berita)</option>
-        </select>
-        {errors.type && (
-          <p className="mt-1 text-sm text-red-600">{errors.type.message}</p>
-        )}
+        <Select2
+          name="type"
+          value={sectionType}
+          onChange={(value) => {
+            setValue('type', value as any, { shouldValidate: true })
+          }}
+          options={[
+            { value: 'motto', label: 'Motto' },
+            { value: 'video-profile', label: 'Video Profile' },
+            { value: 'admission', label: 'Admission (Penerimaan)' },
+            { value: 'split-screen', label: 'Split Screen (Yellow Background)' },
+            { value: 'masjid-al-fatih', label: 'Masjid AL FATIH' },
+            { value: 'university-map', label: 'University Map (Peta Universitas)' },
+            { value: 'global-stage', label: 'Global Stage (International Program)' },
+            { value: 'feature', label: 'Feature' },
+            { value: 'faq', label: 'FAQ Section' },
+            { value: 'figures', label: 'Figures / Tokoh-Tokoh' },
+            { value: 'partnerships', label: 'Partnerships / Kerjasama' },
+            { value: 'news-section', label: 'News Section (Berita)' },
+          ]}
+          placeholder="Pilih tipe section..."
+          isSearchable={true}
+          error={errors.type?.message}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">

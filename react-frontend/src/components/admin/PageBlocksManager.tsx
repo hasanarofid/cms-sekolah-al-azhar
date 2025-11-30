@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Trash2, Edit2, ChevronDown, ChevronUp, X, Upload, Loader2 } from 'lucide-react'
 import { apiClient } from '../../lib/api-client'
 import { getImageUrl } from '../../lib/utils-image-url'
+import { Select2 } from './Select2'
 
 interface PageBlock {
   id: string
@@ -308,17 +309,18 @@ export function PageBlocksManager({ pageId, initialBlocks = [] }: PageBlocksMana
             </div>
           )}
           <div className="flex items-center space-x-4">
-            <select
-              value={newBlockType}
-              onChange={(e) => setNewBlockType(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            >
-              {BLOCK_TYPES.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
+            <div className="flex-1">
+              <Select2
+                value={newBlockType}
+                onChange={(value) => setNewBlockType(value)}
+                options={BLOCK_TYPES.map((type) => ({
+                  value: type.value,
+                  label: type.label
+                }))}
+                placeholder="Pilih tipe block..."
+                isSearchable={true}
+              />
+            </div>
             <button
               type="button"
               onClick={(e) => {
@@ -1564,16 +1566,20 @@ function BlockEditor({ pageId, block, onClose, onSave }: {
               <label className="block text-sm font-medium text-gray-700">Cards</label>
               <div className="flex items-center space-x-4">
                 <label className="text-sm text-gray-700">Columns:</label>
-                <select
-                  value={blockData.columns || 3}
-                  onChange={(e) => setBlockData({ ...blockData, columns: parseInt(e.target.value) })}
-                  className="px-3 py-1 border border-gray-300 rounded-lg"
-                >
-                  <option value={1}>1</option>
-                  <option value={2}>2</option>
-                  <option value={3}>3</option>
-                  <option value={4}>4</option>
-                </select>
+                <div className="w-24">
+                  <Select2
+                    value={String(blockData.columns || 3)}
+                    onChange={(value) => setBlockData({ ...blockData, columns: parseInt(value) })}
+                    options={[
+                      { value: '1', label: '1' },
+                      { value: '2', label: '2' },
+                      { value: '3', label: '3' },
+                      { value: '4', label: '4' },
+                    ]}
+                    placeholder="Columns..."
+                    isSearchable={false}
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => {

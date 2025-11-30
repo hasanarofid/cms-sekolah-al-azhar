@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { Upload, X, Loader2, Save } from 'lucide-react'
 import { apiClient } from '../../lib/api-client'
+import { Select2 } from './Select2'
 import { getImageUrl } from '../../lib/utils-image-url'
 
 interface SEOData {
@@ -289,15 +290,19 @@ export function SEOForm({ seo }: SEOFormProps) {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Robots
             </label>
-            <select
-              {...register('seoRobots')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            >
-              <option value="index, follow">Index, Follow</option>
-              <option value="index, nofollow">Index, No Follow</option>
-              <option value="noindex, follow">No Index, Follow</option>
-              <option value="noindex, nofollow">No Index, No Follow</option>
-            </select>
+            <Select2
+              name="seoRobots"
+              value={watch('seoRobots')}
+              onChange={(value) => setValue('seoRobots', value)}
+              options={[
+                { value: 'index, follow', label: 'Index, Follow' },
+                { value: 'index, nofollow', label: 'Index, No Follow' },
+                { value: 'noindex, follow', label: 'No Index, Follow' },
+                { value: 'noindex, nofollow', label: 'No Index, No Follow' },
+              ]}
+              placeholder="Pilih robots..."
+              isSearchable={false}
+            />
           </div>
 
           <div>
@@ -403,14 +408,18 @@ export function SEOForm({ seo }: SEOFormProps) {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               OG Type
             </label>
-            <select
-              {...register('ogType')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            >
-              <option value="website">Website</option>
-              <option value="article">Article</option>
-              <option value="blog">Blog</option>
-            </select>
+            <Select2
+              name="ogType"
+              value={watch('ogType')}
+              onChange={(value) => setValue('ogType', value)}
+              options={[
+                { value: 'website', label: 'Website' },
+                { value: 'article', label: 'Article' },
+                { value: 'blog', label: 'Blog' },
+              ]}
+              placeholder="Pilih OG Type..."
+              isSearchable={false}
+            />
           </div>
 
           <div>
@@ -448,13 +457,17 @@ export function SEOForm({ seo }: SEOFormProps) {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Card Type
             </label>
-            <select
-              {...register('twitterCard')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            >
-              <option value="summary">Summary</option>
-              <option value="summary_large_image">Summary Large Image</option>
-            </select>
+            <Select2
+              name="twitterCard"
+              value={watch('twitterCard')}
+              onChange={(value) => setValue('twitterCard', value)}
+              options={[
+                { value: 'summary', label: 'Summary' },
+                { value: 'summary_large_image', label: 'Summary Large Image' },
+              ]}
+              placeholder="Pilih Card Type..."
+              isSearchable={false}
+            />
           </div>
 
           <div>

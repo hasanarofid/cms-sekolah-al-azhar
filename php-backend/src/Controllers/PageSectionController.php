@@ -74,6 +74,20 @@ class PageSectionController extends BaseController
                 } else {
                     $section['extracurricularItems'] = [];
                 }
+                // Parse organizationItems JSON to array
+                if (isset($section['organizationItems']) && $section['organizationItems']) {
+                    $decoded = json_decode($section['organizationItems'], true);
+                    $section['organizationItems'] = $decoded !== null ? $decoded : [];
+                } else {
+                    $section['organizationItems'] = [];
+                }
+                // Parse achievementItems JSON to array
+                if (isset($section['achievementItems']) && $section['achievementItems']) {
+                    $decoded = json_decode($section['achievementItems'], true);
+                    $section['achievementItems'] = $decoded !== null ? $decoded : [];
+                } else {
+                    $section['achievementItems'] = [];
+                }
             }
 
             Response::json($sections);
@@ -141,13 +155,21 @@ class PageSectionController extends BaseController
         $extracurricularItems = isset($data['extracurricularItems']) 
             ? (is_string($data['extracurricularItems']) ? $data['extracurricularItems'] : json_encode($data['extracurricularItems']))
             : null;
+        
+        $organizationItems = isset($data['organizationItems']) 
+            ? (is_string($data['organizationItems']) ? $data['organizationItems'] : json_encode($data['organizationItems']))
+            : null;
+        
+        $achievementItems = isset($data['achievementItems']) 
+            ? (is_string($data['achievementItems']) ? $data['achievementItems'] : json_encode($data['achievementItems']))
+            : null;
 
         $this->db->query(
             'INSERT INTO PageSection (id, pageId, type, title, titleEn, subtitle, subtitleEn, content, 
              contentEn, image, imageLeft, imageRight, images, videoUrl, buttonText, buttonTextEn, buttonUrl, 
              badgeImage, accreditationNumber, accreditationBody, faqItems, figures, navigationItems, programItems, 
-             facilityItems, extracurricularItems, `order`, isActive) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+             facilityItems, extracurricularItems, organizationItems, achievementItems, `order`, isActive) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $id,
                 $pageId,
@@ -175,6 +197,8 @@ class PageSectionController extends BaseController
                 $programItems,
                 $facilityItems,
                 $extracurricularItems,
+                $organizationItems,
+                $achievementItems,
                 $newOrder,
                 isset($data['isActive']) ? ($data['isActive'] ? 1 : 0) : 1,
             ]
@@ -254,6 +278,20 @@ class PageSectionController extends BaseController
         } else {
             $section['extracurricularItems'] = [];
         }
+        // Decode organizationItems JSON to array
+        if (isset($section['organizationItems']) && $section['organizationItems']) {
+            $decoded = json_decode($section['organizationItems'], true);
+            $section['organizationItems'] = $decoded !== null ? $decoded : [];
+        } else {
+            $section['organizationItems'] = [];
+        }
+        // Decode achievementItems JSON to array
+        if (isset($section['achievementItems']) && $section['achievementItems']) {
+            $decoded = json_decode($section['achievementItems'], true);
+            $section['achievementItems'] = $decoded !== null ? $decoded : [];
+        } else {
+            $section['achievementItems'] = [];
+        }
 
         Response::json($section);
     }
@@ -299,13 +337,21 @@ class PageSectionController extends BaseController
         $extracurricularItems = isset($data['extracurricularItems']) 
             ? (is_string($data['extracurricularItems']) ? $data['extracurricularItems'] : json_encode($data['extracurricularItems']))
             : ($existing['extracurricularItems'] ?? null);
+        
+        $organizationItems = isset($data['organizationItems']) 
+            ? (is_string($data['organizationItems']) ? $data['organizationItems'] : json_encode($data['organizationItems']))
+            : ($existing['organizationItems'] ?? null);
+        
+        $achievementItems = isset($data['achievementItems']) 
+            ? (is_string($data['achievementItems']) ? $data['achievementItems'] : json_encode($data['achievementItems']))
+            : ($existing['achievementItems'] ?? null);
 
         $this->db->query(
             'UPDATE PageSection SET type = ?, title = ?, titleEn = ?, subtitle = ?, subtitleEn = ?, 
              content = ?, contentEn = ?, image = ?, imageLeft = ?, imageRight = ?, images = ?, videoUrl = ?, buttonText = ?, 
              buttonTextEn = ?, buttonUrl = ?, badgeImage = ?, accreditationNumber = ?, accreditationBody = ?, 
              faqItems = ?, figures = ?, navigationItems = ?, programItems = ?, facilityItems = ?, extracurricularItems = ?, 
-             `order` = ?, isActive = ? WHERE id = ?',
+             organizationItems = ?, achievementItems = ?, `order` = ?, isActive = ? WHERE id = ?',
             [
                 $data['type'] ?? $existing['type'],
                 $data['title'] ?? $existing['title'],
@@ -331,6 +377,8 @@ class PageSectionController extends BaseController
                 $programItems,
                 $facilityItems,
                 $extracurricularItems,
+                $organizationItems,
+                $achievementItems,
                 $data['order'] ?? $existing['order'],
                 isset($data['isActive']) ? ($data['isActive'] ? 1 : 0) : $existing['isActive'],
                 $id,
@@ -382,6 +430,20 @@ class PageSectionController extends BaseController
             $section['extracurricularItems'] = $decoded !== null ? $decoded : [];
         } else {
             $section['extracurricularItems'] = [];
+        }
+        // Decode organizationItems JSON to array
+        if (isset($section['organizationItems']) && $section['organizationItems']) {
+            $decoded = json_decode($section['organizationItems'], true);
+            $section['organizationItems'] = $decoded !== null ? $decoded : [];
+        } else {
+            $section['organizationItems'] = [];
+        }
+        // Decode achievementItems JSON to array
+        if (isset($section['achievementItems']) && $section['achievementItems']) {
+            $decoded = json_decode($section['achievementItems'], true);
+            $section['achievementItems'] = $decoded !== null ? $decoded : [];
+        } else {
+            $section['achievementItems'] = [];
         }
         Response::json($section);
     }

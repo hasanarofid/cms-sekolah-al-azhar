@@ -6,6 +6,7 @@ import { apiClient } from '../../lib/api-client'
 import { slugify } from '../../lib/utils'
 import { getImageUrl } from '../../lib/utils-image-url'
 import { RichTextEditor } from './RichTextEditor'
+import { Select2 } from './Select2'
 
 interface Post {
   id: string
@@ -222,17 +223,20 @@ export function PostForm({ post, categories = [] }: PostFormProps) {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Kategori
           </label>
-          <select
-            {...register('categoryId')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          >
-            <option value="">Pilih Kategori</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+          <Select2
+            name="categoryId"
+            value={watch('categoryId') || ''}
+            onChange={(value: string) => setValue('categoryId', value || undefined)}
+            options={[
+              { value: '', label: 'Pilih Kategori' },
+              ...categories.map((category) => ({
+                value: category.id,
+                label: category.name
+              }))
+            ]}
+            placeholder="Pilih kategori..."
+            isSearchable={true}
+          />
         </div>
       </div>
 
