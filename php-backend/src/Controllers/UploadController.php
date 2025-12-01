@@ -61,23 +61,45 @@ class UploadController extends BaseController
         // Get file extension
         $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         $videoExtensions = ['mp4', 'webm', 'ogg', 'ogv', 'mov', 'avi', 'm4v'];
+        $documentExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+        
+        // Check if this is a document upload
+        $isDocument = isset($_POST['isDocument']) && ($_POST['isDocument'] === 'true' || $_POST['isDocument'] === true || $_POST['isDocument'] === '1');
+        if (!$isDocument) {
+            $isDocument = in_array($extension, $documentExtensions);
+        }
+        if (!$isDocument) {
+            $isDocument = in_array($file['type'], ALLOWED_DOCUMENT_TYPES);
+        }
         
         // Check if this is a video upload
         // Priority 1: Explicit isVideo parameter from frontend
         $isVideo = isset($_POST['isVideo']) && ($_POST['isVideo'] === 'true' || $_POST['isVideo'] === true || $_POST['isVideo'] === '1');
         
         // Priority 2: Check by file extension (more reliable than MIME type)
-        if (!$isVideo) {
+        if (!$isVideo && !$isDocument) {
             $isVideo = in_array($extension, $videoExtensions);
         }
         
         // Priority 3: Check by MIME type (some browsers send wrong MIME type)
-        if (!$isVideo) {
+        if (!$isVideo && !$isDocument) {
             $isVideo = in_array($file['type'], ALLOWED_VIDEO_TYPES);
         }
 
         // Validate file type
-        if ($isVideo) {
+        if ($isDocument) {
+            // Document file validation
+            $extensionValid = in_array($extension, $documentExtensions);
+            $mimeValid = in_array($file['type'], ALLOWED_DOCUMENT_TYPES);
+            
+            if (!$extensionValid && !$mimeValid) {
+                Response::error('Invalid document file type. Allowed: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX. Received MIME: ' . $file['type'] . ', Extension: ' . $extension, 400);
+            }
+            // Validate document file size
+            if ($file['size'] > MAX_DOCUMENT_SIZE) {
+                Response::error('File size too large. Maximum size is 10MB for documents.', 400);
+            }
+        } elseif ($isVideo) {
             // Video file validation - check extension first (most reliable)
             $extensionValid = in_array($extension, $videoExtensions);
             
@@ -120,7 +142,7 @@ class UploadController extends BaseController
 
         // Determine upload directory based on type parameter
         $type = $_POST['type'] ?? 'general';
-        $allowedTypes = ['sliders', 'general', 'home-sections', 'figures', 'partnerships', 'categories', 'posts', 'pages'];
+        $allowedTypes = ['sliders', 'general', 'home-sections', 'figures', 'partnerships', 'categories', 'posts', 'pages', 'documents'];
         if (!in_array($type, $allowedTypes)) {
             $type = 'general';
         }
@@ -145,7 +167,9 @@ class UploadController extends BaseController
         $timestamp = time();
         $randomString = bin2hex(random_bytes(8));
         $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        if ($isVideo) {
+        if ($isDocument) {
+            $prefix = 'document';
+        } elseif ($isVideo) {
             $prefix = $type === 'sliders' ? 'slider-video' : ($type === 'home-sections' ? 'section-video' : 'video');
         } else {
             $prefix = $type === 'sliders' ? 'slider' : ($type === 'home-sections' ? 'section' : 'file');

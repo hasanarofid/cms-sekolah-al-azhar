@@ -88,28 +88,63 @@ export default function MenusPage() {
                     {menu.children && menu.children.length > 0 && (
                       <div className="mt-4 ml-6 space-y-2">
                         {menu.children.map((child: any) => (
-                          <div
-                            key={child.id}
-                            className="flex items-center justify-between p-3 bg-gray-50 rounded"
-                          >
-                            <div>
-                              <p className="font-medium">{child.title}</p>
-                              <p className="text-sm text-gray-500">/{child.slug}</p>
+                          <div key={child.id}>
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                              <div>
+                                <p className="font-medium">{child.title}</p>
+                                {child.titleEn && (
+                                  <p className="text-sm text-gray-600">{child.titleEn}</p>
+                                )}
+                                <p className="text-sm text-gray-500">/{child.slug}</p>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Link
+                                  to={`/admin/menus/${child.id}`}
+                                  className="text-primary-600 hover:text-primary-700"
+                                >
+                                  <Edit size={16} />
+                                </Link>
+                                <DeleteButton
+                                  id={child.id}
+                                  apiEndpoint="/admin/menus"
+                                  confirmMessage="Yakin ingin menghapus menu ini?"
+                                  onDeleted={loadMenus}
+                                />
+                              </div>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <Link
-                                to={`/admin/menus/${child.id}`}
-                                className="text-primary-600 hover:text-primary-700"
-                              >
-                                <Edit size={16} />
-                              </Link>
-                              <DeleteButton
-                                id={child.id}
-                                apiEndpoint="/admin/menus"
-                                confirmMessage="Yakin ingin menghapus menu ini?"
-                                onDeleted={loadMenus}
-                              />
-                            </div>
+                            {/* Level 2 Children (Grandchildren) */}
+                            {child.children && child.children.length > 0 && (
+                              <div className="mt-2 ml-6 space-y-2">
+                                {child.children.map((grandchild: any) => (
+                                  <div
+                                    key={grandchild.id}
+                                    className="flex items-center justify-between p-3 bg-gray-100 rounded"
+                                  >
+                                    <div>
+                                      <p className="font-medium text-sm">{grandchild.title}</p>
+                                      {grandchild.titleEn && (
+                                        <p className="text-xs text-gray-600">{grandchild.titleEn}</p>
+                                      )}
+                                      <p className="text-xs text-gray-500">/{grandchild.slug}</p>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <Link
+                                        to={`/admin/menus/${grandchild.id}`}
+                                        className="text-primary-600 hover:text-primary-700"
+                                      >
+                                        <Edit size={14} />
+                                      </Link>
+                                      <DeleteButton
+                                        id={grandchild.id}
+                                        apiEndpoint="/admin/menus"
+                                        confirmMessage="Yakin ingin menghapus menu ini?"
+                                        onDeleted={loadMenus}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>

@@ -14,10 +14,14 @@ import { FacilityItemsManager } from './FacilityItemsManager'
 import { ExtracurricularItemsManager } from './ExtracurricularItemsManager'
 import { OrganizationStructureManager } from './OrganizationStructureManager'
 import { StudentAchievementsManager } from './StudentAchievementsManager'
+import { CurriculumItemsManager } from './CurriculumItemsManager'
+import { AcademicCalendarItemsManager } from './AcademicCalendarItemsManager'
+import { DocumentItemsManager } from './DocumentItemsManager'
+import { RichTextEditor } from './RichTextEditor'
 import { Select2 } from './Select2'
 
 const sectionSchema = z.object({
-  type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'news-section', 'faq', 'accreditation', 'navigation-grid', 'program-cards', 'facility-gallery', 'extracurricular-detail', 'organization-structure', 'student-achievements']),
+  type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'news-section', 'faq', 'accreditation', 'navigation-grid', 'program-cards', 'facility-gallery', 'extracurricular-detail', 'organization-structure', 'student-achievements', 'curriculum-table', 'academic-calendar', 'bos-report', 'contact']),
   title: z.string().optional(),
   titleEn: z.string().optional(),
   subtitle: z.string().optional(),
@@ -101,6 +105,34 @@ const sectionSchema = z.object({
     answerEn: z.string().optional(),
     order: z.number(),
   })).optional(),
+  curriculumItems: z.array(z.object({
+    id: z.string(),
+    mataPelajaran: z.string(),
+    jpTM: z.number(),
+    jpProyek: z.number().nullable().optional(),
+    order: z.number(),
+  })).optional(),
+  calendarItems: z.array(z.object({
+    id: z.string(),
+    bulan: z.string(),
+    kegiatan: z.string(),
+    keterangan: z.string().optional(),
+    tanggalMulai: z.string().optional(),
+    tanggalSelesai: z.string().optional(),
+    order: z.number(),
+  })).optional(),
+  documentItems: z.array(z.object({
+    id: z.string(),
+    nama: z.string(),
+    fileUrl: z.string(),
+    fileName: z.string().optional(),
+    order: z.number(),
+  })).optional(),
+  address: z.string().optional(),
+  addressEn: z.string().optional(),
+  email: z.string().email().optional().or(z.literal('')).nullable(),
+  phone: z.string().optional(),
+  mapEmbedUrl: z.string().optional(),
   order: z.number().int().min(0).default(0),
   isActive: z.boolean().default(true),
 })
@@ -127,6 +159,11 @@ interface PageSectionFormProps {
     buttonTextEn?: string | null
     buttonUrl?: string | null
     faqItems?: string | any[] | null
+    address?: string | null
+    addressEn?: string | null
+    email?: string | null
+    phone?: string | null
+    mapEmbedUrl?: string | null
     order: number
     isActive: boolean
   }
@@ -164,6 +201,9 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
   const [extracurricularItems, setExtracurricularItems] = useState<any[]>(parseItems((section as any)?.extracurricularItems))
   const [organizationItems, setOrganizationItems] = useState<any[]>(parseItems((section as any)?.organizationItems))
   const [achievementItems, setAchievementItems] = useState<any[]>(parseItems((section as any)?.achievementItems))
+  const [curriculumItems, setCurriculumItems] = useState<any[]>(parseItems((section as any)?.curriculumItems))
+  const [calendarItems, setCalendarItems] = useState<any[]>(parseItems((section as any)?.calendarItems))
+  const [documentItems, setDocumentItems] = useState<any[]>(parseItems((section as any)?.documentItems))
   
   const [previewBadgeImage, setPreviewBadgeImage] = useState<string | null>(
     (section as any)?.badgeImage ? getImageUrl((section as any).badgeImage) : null
@@ -202,6 +242,14 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
           extracurricularItems: parseItems((section as any)?.extracurricularItems),
           organizationItems: parseItems((section as any)?.organizationItems),
           achievementItems: parseItems((section as any)?.achievementItems),
+          curriculumItems: parseItems((section as any)?.curriculumItems),
+          calendarItems: parseItems((section as any)?.calendarItems),
+          documentItems: parseItems((section as any)?.documentItems),
+          address: (section as any)?.address || undefined,
+          addressEn: (section as any)?.addressEn || undefined,
+          email: (section as any)?.email || undefined,
+          phone: (section as any)?.phone || undefined,
+          mapEmbedUrl: (section as any)?.mapEmbedUrl || undefined,
           order: section.order ?? 0,
           isActive: section.isActive ?? true,
         }
@@ -365,6 +413,14 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
         extracurricularItems: sectionType === 'extracurricular-detail' && extracurricularItems.length > 0 ? JSON.stringify(extracurricularItems) : null,
         organizationItems: sectionType === 'organization-structure' && organizationItems.length > 0 ? JSON.stringify(organizationItems) : null,
         achievementItems: sectionType === 'student-achievements' && achievementItems.length > 0 ? JSON.stringify(achievementItems) : null,
+        curriculumItems: sectionType === 'curriculum-table' && curriculumItems.length > 0 ? JSON.stringify(curriculumItems) : null,
+        calendarItems: sectionType === 'academic-calendar' && calendarItems.length > 0 ? JSON.stringify(calendarItems) : null,
+        documentItems: sectionType === 'bos-report' && documentItems.length > 0 ? JSON.stringify(documentItems) : null,
+        address: sectionType === 'contact' ? (data.address || null) : null,
+        addressEn: sectionType === 'contact' ? (data.addressEn || null) : null,
+        email: sectionType === 'contact' ? (data.email || null) : null,
+        phone: sectionType === 'contact' ? (data.phone || null) : null,
+        mapEmbedUrl: sectionType === 'contact' ? (data.mapEmbedUrl || null) : null,
         faqItems: sectionType === 'faq' && faqItems.length > 0 ? JSON.stringify(faqItems) : null,
         order: data.order || 0,
         isActive: data.isActive !== undefined ? data.isActive : true,
@@ -436,6 +492,10 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
             { value: 'extracurricular-detail', label: 'Extracurricular Detail (Detail Ekstrakurikuler)' },
             { value: 'organization-structure', label: 'Organization Structure (Struktur Organisasi)' },
             { value: 'student-achievements', label: 'Student Achievements (Prestasi Siswa)' },
+            { value: 'curriculum-table', label: 'Curriculum Table (Tabel Kurikulum)' },
+            { value: 'academic-calendar', label: 'Academic Calendar (Kalender Pendidikan)' },
+            { value: 'bos-report', label: 'BOS Report (Laporan Realisasi BOS)' },
+            { value: 'contact', label: 'Contact (Kontak)' },
           ]}
           placeholder="Pilih tipe section..."
           isSearchable={true}
@@ -493,6 +553,43 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
             />
           </div>
         </div>
+      )}
+
+      {/* Content / Deskripsi dengan RichTextEditor untuk curriculum-table, academic-calendar, bos-report, dan contact */}
+      {(sectionType === 'curriculum-table' || sectionType === 'academic-calendar' || sectionType === 'bos-report' || sectionType === 'contact') && (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Deskripsi (ID)
+            </label>
+            <RichTextEditor
+              value={watch('content') || ''}
+              onChange={(value) => setValue('content', value, { shouldValidate: true })}
+              placeholder={
+                sectionType === 'curriculum-table' ? "Masukkan deskripsi kurikulum..." :
+                sectionType === 'academic-calendar' ? "Masukkan deskripsi kalender pendidikan..." :
+                sectionType === 'bos-report' ? "Masukkan deskripsi laporan realisasi BOS..." :
+                "Masukkan deskripsi kontak..."
+              }
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Deskripsi (EN)
+            </label>
+            <RichTextEditor
+              value={watch('contentEn') || ''}
+              onChange={(value) => setValue('contentEn', value, { shouldValidate: true })}
+              placeholder={
+                sectionType === 'curriculum-table' ? "Enter curriculum description..." :
+                sectionType === 'academic-calendar' ? "Enter academic calendar description..." :
+                sectionType === 'bos-report' ? "Enter BOS realization report description..." :
+                "Enter contact description..."
+              }
+            />
+          </div>
+        </>
       )}
 
       {(sectionType === 'admission' || sectionType === 'feature' || sectionType === 'split-screen' || sectionType === 'masjid-al-fatih' || sectionType === 'news-section' || sectionType === 'global-stage') && (
@@ -670,6 +767,114 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
             setValue('achievementItems', items, { shouldValidate: true })
           }}
         />
+      )}
+
+      {/* Curriculum Table Items Manager */}
+      {sectionType === 'curriculum-table' && (
+        <CurriculumItemsManager
+          value={curriculumItems}
+          onChange={(items) => {
+            setCurriculumItems(items)
+            setValue('curriculumItems', items, { shouldValidate: true })
+          }}
+        />
+      )}
+
+      {/* Academic Calendar Items Manager */}
+      {sectionType === 'academic-calendar' && (
+        <AcademicCalendarItemsManager
+          value={calendarItems}
+          onChange={(items) => {
+            setCalendarItems(items)
+            setValue('calendarItems', items, { shouldValidate: true })
+          }}
+        />
+      )}
+
+      {/* BOS Report / Document Items Manager */}
+      {sectionType === 'bos-report' && (
+        <DocumentItemsManager
+          value={documentItems}
+          onChange={(items) => {
+            setDocumentItems(items)
+            setValue('documentItems', items, { shouldValidate: true })
+          }}
+        />
+      )}
+
+      {/* Contact Section Fields */}
+      {sectionType === 'contact' && (
+        <>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Alamat (ID) *
+              </label>
+              <textarea
+                {...register('address')}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="Jl. Raya Solo – Tawangmangu, Salam, Karangpandan, Karanganyar"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Alamat (EN)
+              </label>
+              <textarea
+                {...register('addressEn')}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="Jl. Raya Solo – Tawangmangu, Salam, Karangpandan, Karanganyar"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email *
+              </label>
+              <input
+                {...register('email')}
+                type="email"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="aaiibs@alazhariibs.sch.id"
+              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Call Center / Phone *
+              </label>
+              <input
+                {...register('phone')}
+                type="tel"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="0811 2020 101"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Google Maps Embed URL *
+            </label>
+            <input
+              {...register('mapEmbedUrl')}
+              type="url"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="https://www.google.com/maps/embed?pb=..."
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              Cara mendapatkan embed URL: Buka Google Maps → Cari lokasi → Klik "Bagikan" → Pilih "Sematkan peta" → Salin URL iframe src
+            </p>
+          </div>
+        </>
       )}
 
       {/* Extracurricular Detail Items Manager */}

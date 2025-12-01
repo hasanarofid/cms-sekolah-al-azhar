@@ -17,6 +17,10 @@ import { FacilityGallerySection } from './FacilityGallerySection'
 import { ExtracurricularDetailSection } from './ExtracurricularDetailSection'
 import { OrganizationStructureSection } from './OrganizationStructureSection'
 import { StudentAchievementsSection } from './StudentAchievementsSection'
+import { CurriculumTableSection } from './CurriculumTableSection'
+import { AcademicCalendarSection } from './AcademicCalendarSection'
+import { BOSReportSection } from './BOSReportSection'
+import { ContactSection } from './ContactSection'
 import { parseImages } from '../lib/utils-images'
 import { getImageUrl, getImageUrls } from '../lib/utils-image-url'
 
@@ -574,6 +578,50 @@ export function SectionRenderer({
   if (section.type === 'student-achievements') {
     return (
       <StudentAchievementsSection
+        key={section.id}
+        section={section as any}
+        locale={locale}
+      />
+    )
+  }
+
+  // Curriculum Table Section
+  if (section.type === 'curriculum-table') {
+    return (
+      <CurriculumTableSection
+        key={section.id}
+        section={section as any}
+        locale={locale}
+      />
+    )
+  }
+
+  // Academic Calendar Section
+  if (section.type === 'academic-calendar') {
+    return (
+      <AcademicCalendarSection
+        key={section.id}
+        section={section as any}
+        locale={locale}
+      />
+    )
+  }
+
+  // BOS Report Section
+  if (section.type === 'bos-report') {
+    return (
+      <BOSReportSection
+        key={section.id}
+        section={section as any}
+        locale={locale}
+      />
+    )
+  }
+
+  // Contact Section
+  if (section.type === 'contact') {
+    return (
+      <ContactSection
         key={section.id}
         section={section as any}
         locale={locale}

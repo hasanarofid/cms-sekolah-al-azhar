@@ -3,20 +3,25 @@ import { useSearchParams } from 'react-router-dom'
 import { Navigation } from '../components/Navigation'
 import { Footer } from '../components/Footer'
 import { WhatsAppButton } from '../components/WhatsAppButton'
-import { ContactForm } from '../components/ContactForm'
+import { PageSections } from '../components/PageSections'
 import { apiClient } from '../lib/api-client'
 import { useSettings } from '../lib/use-settings'
+import { useSEO } from '../lib/use-seo'
 
 export default function ContactPage() {
   const [searchParams] = useSearchParams()
   const locale = (searchParams.get('locale') as 'id' | 'en') || 'id'
 
   const [menus, setMenus] = useState<any[]>([])
+  const [page, setPage] = useState<any>(null)
   const [settings, setSettings] = useState<any>({})
   const [loading, setLoading] = useState(true)
 
   // Apply settings (favicon, title) ke document
   useSettings(settings)
+  
+  // Apply SEO meta tags
+  useSEO(page?.seo || null, settings.website_title?.value || 'SMA AL AZHAR INSAN CENDEKIA JATIBENING')
 
   useEffect(() => {
     async function loadData() {
@@ -52,6 +57,38 @@ export default function ContactPage() {
 
         setMenus(filteredMenus)
         setSettings(settingsData)
+
+        // Load page by slug 'kontak' - same approach as DynamicPage
+        try {
+          const pagesData = await apiClient.get('/admin/pages')
+          const foundPage = pagesData.find((p: any) => p.slug === 'kontak' && p.isPublished)
+          
+          if (foundPage) {
+            // Load sections for this page
+            const [sections, seoDataRaw] = await Promise.all([
+              apiClient.get(`/admin/pages/${foundPage.id}/sections`).catch(() => []),
+              apiClient.get(`/admin/seo?pageType=page&pageId=${foundPage.id}`, false).catch(() => 
+                apiClient.get('/admin/seo?pageType=global', false).catch(() => null)
+              ),
+            ])
+            
+            // Merge page data with sections and SEO
+            let seoData: any
+            if (seoDataRaw) {
+              seoData = Array.isArray(seoDataRaw) ? seoDataRaw[0] : seoDataRaw
+            }
+            
+            setPage({
+              ...foundPage,
+              sections: sections || [],
+              seo: seoData || null,
+            })
+          } else {
+            console.warn('Page with slug "kontak" not found or not published')
+          }
+        } catch (error) {
+          console.error('Error loading page:', error)
+        }
       } catch (error) {
         console.error('Error loading data:', error)
       } finally {
@@ -73,6 +110,8 @@ export default function ContactPage() {
     )
   }
 
+  const hasPageSections = page?.sections && Array.isArray(page.sections) && page.sections.length > 0
+
   return (
     <div className="min-h-screen bg-white">
       <Navigation 
@@ -83,39 +122,28 @@ export default function ContactPage() {
         showWebsiteName={settings.show_website_name?.value === 'true'}
       />
 
-      <div className="bg-primary-600 text-white py-24 md:py-32 lg:py-40">
+      {/* Hero Section - Blue Background */}
+      <div className="bg-primary-600 text-white py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold">
-            {locale === 'en' ? 'Contact' : 'Kontak'}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold">
+            {locale === 'en' && page?.titleEn ? page.titleEn : (page?.title || (locale === 'en' ? 'Contact' : 'Kontak'))}
           </h1>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Alamat</h2>
-            <p className="text-gray-600 mb-4">
-              {settings.footer_address?.value || 'Jl. Raya Solo - Tawangmangu, Gedangan, Salam, Kec. Karangpandan, Kabupaten Karanganyar, Jawa Tengah 57791'}
-            </p>
-            <div className="space-y-2">
-              {settings.footer_phone?.value && (
-                <p className="text-gray-600">
-                  <strong>Call Center:</strong> {settings.footer_phone.value}
-                </p>
-              )}
-              {settings.footer_email?.value && (
-                <p className="text-gray-600">
-                  <strong>Email:</strong> {settings.footer_email.value}
-                </p>
-              )}
-            </div>
-          </div>
-          <div>
-            <ContactForm />
-          </div>
+      {/* Page Sections (custom sections per page) */}
+      {hasPageSections && (
+        <PageSections sections={page.sections} locale={locale} />
+      )}
+
+      {/* Fallback jika tidak ada sections */}
+      {!hasPageSections && (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <p className="text-center text-gray-500">
+            {locale === 'en' ? 'No content available.' : 'Konten belum tersedia.'}
+          </p>
         </div>
-      </div>
+      )}
 
       <Footer 
         locale={locale}
