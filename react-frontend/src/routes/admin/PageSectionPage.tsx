@@ -4,6 +4,7 @@ import { ArrowLeft, Plus, Edit } from 'lucide-react'
 import { AdminLayout } from '../../components/admin/AdminLayout'
 import { apiClient } from '../../lib/api-client'
 import { DeleteButton } from '../../components/admin/DeleteButton'
+import { StatusToggleButton } from '../../components/admin/StatusToggleButton'
 import { PageSectionForm } from '../../components/admin/PageSectionForm'
 
 export default function PageSectionPage() {
@@ -160,6 +161,12 @@ export default function PageSectionPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end space-x-2">
+                          <StatusToggleButton
+                            id={section.id}
+                            apiEndpoint="/admin/page-sections"
+                            isActive={section.isActive}
+                            onToggled={loadData}
+                          />
                           <button
                             onClick={() => setEditingSection(section)}
                             className="text-primary-600 hover:text-primary-900"

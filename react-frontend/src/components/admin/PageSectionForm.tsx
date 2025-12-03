@@ -21,7 +21,7 @@ import { RichTextEditor } from './RichTextEditor'
 import { Select2 } from './Select2'
 
 const sectionSchema = z.object({
-  type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'news-section', 'faq', 'accreditation', 'navigation-grid', 'program-cards', 'facility-gallery', 'extracurricular-detail', 'organization-structure', 'student-achievements', 'curriculum-table', 'academic-calendar', 'bos-report', 'contact']),
+  type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'news-section', 'faq', 'accreditation', 'navigation-grid', 'program-cards', 'facility-gallery', 'extracurricular-detail', 'organization-structure', 'student-achievements', 'curriculum-table', 'academic-calendar', 'bos-report', 'contact', 'maps']),
   title: z.string().optional(),
   titleEn: z.string().optional(),
   subtitle: z.string().optional(),
@@ -420,7 +420,7 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
         addressEn: sectionType === 'contact' ? (data.addressEn || null) : null,
         email: sectionType === 'contact' ? (data.email || null) : null,
         phone: sectionType === 'contact' ? (data.phone || null) : null,
-        mapEmbedUrl: sectionType === 'contact' ? (data.mapEmbedUrl || null) : null,
+        mapEmbedUrl: (sectionType === 'contact' || sectionType === 'maps') ? (data.mapEmbedUrl || null) : null,
         faqItems: sectionType === 'faq' && faqItems.length > 0 ? JSON.stringify(faqItems) : null,
         order: data.order || 0,
         isActive: data.isActive !== undefined ? data.isActive : true,
@@ -496,6 +496,7 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
             { value: 'academic-calendar', label: 'Academic Calendar (Kalender Pendidikan)' },
             { value: 'bos-report', label: 'BOS Report (Laporan Realisasi BOS)' },
             { value: 'contact', label: 'Contact (Kontak)' },
+            { value: 'maps', label: 'Maps (Peta)' },
           ]}
           placeholder="Pilih tipe section..."
           isSearchable={true}
@@ -862,16 +863,16 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Google Maps Embed URL *
+              Google Maps Embed URL / Iframe *
             </label>
-            <input
+            <textarea
               {...register('mapEmbedUrl')}
-              type="url"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="https://www.google.com/maps/embed?pb=..."
+              rows={4}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
+              placeholder="Paste iframe code atau embed URL dari Google Maps. Contoh: &lt;iframe src=&quot;https://www.google.com/maps/embed?pb=...&quot; width=&quot;600&quot; height=&quot;450&quot; style=&quot;border:0;&quot; allowfullscreen=&quot;&quot; loading=&quot;lazy&quot; referrerpolicy=&quot;no-referrer-when-downgrade&quot;&gt;&lt;/iframe&gt;"
             />
             <p className="mt-1 text-sm text-gray-500">
-              Cara mendapatkan embed URL: Buka Google Maps → Cari lokasi → Klik "Bagikan" → Pilih "Sematkan peta" → Salin URL iframe src
+              Cara mendapatkan embed URL: Buka Google Maps → Cari lokasi → Klik "Bagikan" → Pilih "Sematkan peta" → Salin URL iframe src atau paste seluruh iframe code
             </p>
           </div>
         </>
@@ -1129,6 +1130,27 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
             )}
           </div>
         </>
+      )}
+
+      {/* Maps Section Fields */}
+      {sectionType === 'maps' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Google Maps Embed URL / Iframe *
+          </label>
+          <textarea
+            {...register('mapEmbedUrl')}
+            rows={6}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
+            placeholder="Paste iframe code atau embed URL dari Google Maps. Contoh: &lt;iframe src=&quot;https://www.google.com/maps/embed?pb=...&quot; width=&quot;600&quot; height=&quot;450&quot; style=&quot;border:0;&quot; allowfullscreen=&quot;&quot; loading=&quot;lazy&quot; referrerpolicy=&quot;no-referrer-when-downgrade&quot;&gt;&lt;/iframe&gt;"
+          />
+          <p className="mt-1 text-sm text-gray-500">
+            Paste seluruh iframe code atau hanya URL src dari Google Maps embed
+          </p>
+          {errors.mapEmbedUrl && (
+            <p className="mt-1 text-sm text-red-600">{errors.mapEmbedUrl.message}</p>
+          )}
+        </div>
       )}
 
       <div className="grid grid-cols-2 gap-4">

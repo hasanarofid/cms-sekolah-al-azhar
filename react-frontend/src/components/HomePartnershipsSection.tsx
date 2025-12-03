@@ -22,7 +22,7 @@ interface HomePartnershipsSectionProps {
 }
 
 const categoryLabels: Record<string, { id: string; en: string }> = {
-  'international': { id: 'Kerjasama Internasional', en: 'International Cooperation' },
+  'international': { id: 'Kerjasama ', en: 'Cooperation' },
   'health': { id: 'Kerjasama Kesehatan', en: 'Health Cooperation' },
   'student-escort': { id: 'Kerjasama Pengawalan Siswa', en: 'Student Escort Cooperation' },
 }

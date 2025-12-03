@@ -254,6 +254,7 @@ $routes = [
     // Admin - Contacts
     'api/admin/contacts' => 'ContactController@index',
     'api/admin/contacts/([a-zA-Z0-9]+)/read' => 'ContactController@markAsRead',
+    'api/admin/contacts/([a-zA-Z0-9]+)/delete' => 'ContactController@delete',
     
     // Public - Contact
     'api/contact' => 'ContactController@create',

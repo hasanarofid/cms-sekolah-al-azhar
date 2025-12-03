@@ -68,5 +68,22 @@ class ContactController extends BaseController
         $this->db->query('UPDATE Contact SET isRead = 1 WHERE id = ?', [$id]);
         Response::json(['success' => true]);
     }
+
+    public function delete($id)
+    {
+        $this->requireAuth();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Response::error('Method not allowed', 405);
+        }
+
+        $existing = $this->db->fetchOne('SELECT * FROM Contact WHERE id = ?', [$id]);
+        if (!$existing) {
+            Response::error('Contact not found', 404);
+        }
+
+        $this->db->query('DELETE FROM Contact WHERE id = ?', [$id]);
+        Response::json(['success' => true]);
+    }
 }
 

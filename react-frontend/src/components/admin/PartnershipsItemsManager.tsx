@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X, Upload } from 'lucide-react'
 import { apiClient } from '../../lib/api-client'
+import { getImageUrl } from '../../lib/utils-image-url'
 
 interface PartnershipItem {
   id: string
@@ -272,16 +273,20 @@ export function PartnershipsItemsManager({ value, onChange }: PartnershipsItemsM
                               Logo *
                             </label>
                             {item.logo ? (
-                              <div className="relative">
+                              <div className="relative inline-block">
                                 <img
-                                  src={item.logo}
+                                  src={getImageUrl(item.logo)}
                                   alt={item.name}
                                   className="h-20 w-auto object-contain border border-gray-300 rounded p-2 bg-white"
+                                  onError={(e) => {
+                                    console.error('Failed to load logo:', item.logo)
+                                    e.currentTarget.style.display = 'none'
+                                  }}
                                 />
                                 <button
                                   type="button"
                                   onClick={() => handleChange(item.id, 'logo', '')}
-                                  className="absolute top-0 right-0 bg-red-600 text-white p-1 rounded-full hover:bg-red-700"
+                                  className="absolute top-0 right-0 bg-red-600 text-white p-1 rounded-full hover:bg-red-700 transition-colors"
                                 >
                                   <X size={14} />
                                 </button>

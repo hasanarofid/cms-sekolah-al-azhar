@@ -28,6 +28,14 @@ class BaseController
     }
 
     /**
+     * Check if user is authenticated (returns boolean, doesn't throw error)
+     */
+    protected function isAuthenticated()
+    {
+        return $this->auth->check();
+    }
+
+    /**
      * Get authenticated user
      */
     protected function getUser()

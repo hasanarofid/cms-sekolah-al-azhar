@@ -25,6 +25,7 @@ import PageSectionPage from './routes/admin/PageSectionPage'
 import PostsPage from './routes/admin/PostsPage'
 import PostNewPage from './routes/admin/PostNewPage'
 import PostEditPage from './routes/admin/PostEditPage'
+import ContactsPage from './routes/admin/ContactsPage'
 import MenusPage from './routes/admin/MenusPage'
 import CategoriesPage from './routes/admin/CategoriesPage'
 import SettingsPage from './routes/admin/SettingsPage'
@@ -67,6 +68,7 @@ function App() {
         <Route path="/admin/posts" element={<PostsPage />} />
         <Route path="/admin/posts/new" element={<PostNewPage />} />
         <Route path="/admin/posts/:id" element={<PostEditPage />} />
+        <Route path="/admin/contacts" element={<ContactsPage />} />
         <Route path="/admin/menus" element={<MenusPage />} />
         <Route path="/admin/categories" element={<CategoriesPage />} />
         <Route path="/admin/settings" element={<SettingsPage />} />

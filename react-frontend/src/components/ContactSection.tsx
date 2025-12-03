@@ -69,6 +69,32 @@ export function ContactSection({ section, locale = 'id' }: ContactSectionProps) 
   const displayContent = locale === 'en' && section.contentEn ? section.contentEn : section.content
   const displayAddress = locale === 'en' && section.addressEn ? section.addressEn : section.address
 
+  // Extract src URL from iframe code if needed
+  const getMapSrc = (embedUrl: string | null | undefined): string | null => {
+    if (!embedUrl) return null
+    
+    // If it's already a URL, return it
+    if (embedUrl.startsWith('http://') || embedUrl.startsWith('https://')) {
+      return embedUrl
+    }
+    
+    // If it's an iframe code, extract the src
+    const srcMatch = embedUrl.match(/src=["']([^"']+)["']/)
+    if (srcMatch && srcMatch[1]) {
+      return srcMatch[1]
+    }
+    
+    // Try to find URL in the string
+    const urlMatch = embedUrl.match(/https?:\/\/[^\s<>"']+/)
+    if (urlMatch && urlMatch[0]) {
+      return urlMatch[0]
+    }
+    
+    return embedUrl
+  }
+
+  const mapSrc = getMapSrc(section.mapEmbedUrl)
+
   return (
     <section className="py-12 md:py-16 bg-white">
       <div className="container mx-auto px-4 md:px-6 max-w-7xl">
@@ -128,10 +154,10 @@ export function ContactSection({ section, locale = 'id' }: ContactSectionProps) 
           </div>
 
           {/* Right: Google Map */}
-          {section.mapEmbedUrl && (
-            <div className="w-full h-full min-h-[400px] rounded-lg overflow-hidden border border-gray-200">
+          {mapSrc && (
+            <div className="w-full h-full min-h-[400px] rounded-lg overflow-hidden border border-gray-200 shadow-lg">
               <iframe
-                src={section.mapEmbedUrl}
+                src={mapSrc}
                 width="100%"
                 height="100%"
                 style={{ border: 0, minHeight: '400px' }}
@@ -250,7 +276,7 @@ export function ContactSection({ section, locale = 'id' }: ContactSectionProps) 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-3 px-6 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3 px-6 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
                 {isLoading 
                   ? (locale === 'en' ? 'Sending...' : 'Mengirim...') 

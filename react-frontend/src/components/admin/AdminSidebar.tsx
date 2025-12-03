@@ -13,6 +13,8 @@ import {
   ChevronRight,
   Layout,
   Search,
+  ExternalLink,
+  Mail,
   // GraduationCap,
   // School
 } from 'lucide-react'
@@ -101,6 +103,11 @@ const menuItems: MenuItem[] = [
     title: 'Berita',
     href: '/admin/posts',
     icon: <Newspaper size={20} />,
+  },
+  {
+    title: 'Kontak',
+    href: '/admin/contacts',
+    icon: <Mail size={20} />,
   },
   {
     title: 'Menu',
@@ -256,7 +263,16 @@ export function AdminSidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-800">
+        <div className="p-4 border-t border-gray-800 space-y-3">
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center space-x-3 px-4 py-2.5 rounded-lg transition-colors text-gray-300 hover:bg-gray-800 hover:text-white w-full"
+          >
+            <ExternalLink size={18} />
+            <span className="text-sm font-medium">Buka Halaman Depan</span>
+          </a>
           <p className="text-xs text-gray-500 text-center">
             © 2025 CMS Sekolah
           </p>

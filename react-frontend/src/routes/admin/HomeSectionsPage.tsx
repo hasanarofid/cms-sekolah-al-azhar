@@ -4,6 +4,7 @@ import { Plus, Edit } from 'lucide-react'
 import { AdminLayout } from '../../components/admin/AdminLayout'
 import { apiClient } from '../../lib/api-client'
 import { DeleteButton } from '../../components/admin/DeleteButton'
+import { StatusToggleButton } from '../../components/admin/StatusToggleButton'
 
 export default function HomeSectionsPage() {
   const [sections, setSections] = useState<any[]>([])
@@ -102,6 +103,12 @@ export default function HomeSectionsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end space-x-2">
+                          <StatusToggleButton
+                            id={section.id}
+                            apiEndpoint="/admin/home-sections"
+                            isActive={section.isActive}
+                            onToggled={loadSections}
+                          />
                           <Link
                             to={`/admin/home-sections/${section.id}`}
                             className="text-primary-600 hover:text-primary-900"

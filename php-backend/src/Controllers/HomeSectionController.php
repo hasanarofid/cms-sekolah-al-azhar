@@ -10,9 +10,22 @@ class HomeSectionController extends BaseController
     public function index()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            $sections = $this->db->fetchAll(
-                'SELECT * FROM HomeSection WHERE isActive = 1 ORDER BY `order` ASC'
-            );
+            // Check if this is an admin request (authenticated)
+            // For admin, show all sections (including inactive)
+            // For public, only show active sections
+            $isAdmin = $this->isAuthenticated();
+            
+            if ($isAdmin) {
+                // Admin: show all sections
+                $sections = $this->db->fetchAll(
+                    'SELECT * FROM HomeSection ORDER BY `order` ASC'
+                );
+            } else {
+                // Public: only show active sections
+                $sections = $this->db->fetchAll(
+                    'SELECT * FROM HomeSection WHERE isActive = 1 ORDER BY `order` ASC'
+                );
+            }
 
             // Parse images JSON to array
             foreach ($sections as &$section) {
@@ -78,8 +91,8 @@ class HomeSectionController extends BaseController
 
         $this->db->query(
             'INSERT INTO HomeSection (id, type, title, titleEn, subtitle, subtitleEn, content, 
-             contentEn, image, imageLeft, imageRight, images, videoUrl, buttonText, buttonTextEn, buttonUrl, faqItems, figures, partnerships, `order`, isActive) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+             contentEn, image, imageLeft, imageRight, images, videoUrl, buttonText, buttonTextEn, buttonUrl, faqItems, figures, partnerships, mapEmbedUrl, `order`, isActive) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $id,
                 $data['type'] ?? '',
@@ -100,6 +113,7 @@ class HomeSectionController extends BaseController
                 $faqItems,
                 $figures,
                 $partnerships,
+                $data['mapEmbedUrl'] ?? null,
                 $data['order'] ?? 0,
                 isset($data['isActive']) ? ($data['isActive'] ? 1 : 0) : 1,
             ]
@@ -200,7 +214,7 @@ class HomeSectionController extends BaseController
         $this->db->query(
             'UPDATE HomeSection SET type = ?, title = ?, titleEn = ?, subtitle = ?, subtitleEn = ?, 
              content = ?, contentEn = ?, image = ?, imageLeft = ?, imageRight = ?, images = ?, videoUrl = ?, buttonText = ?, 
-             buttonTextEn = ?, buttonUrl = ?, faqItems = ?, figures = ?, partnerships = ?, `order` = ?, isActive = ? WHERE id = ?',
+             buttonTextEn = ?, buttonUrl = ?, faqItems = ?, figures = ?, partnerships = ?, mapEmbedUrl = ?, `order` = ?, isActive = ? WHERE id = ?',
             [
                 $data['type'] ?? $existing['type'],
                 $data['title'] ?? $existing['title'],
@@ -220,6 +234,7 @@ class HomeSectionController extends BaseController
                 $faqItems,
                 $figures,
                 $partnerships,
+                $data['mapEmbedUrl'] ?? $existing['mapEmbedUrl'] ?? null,
                 $data['order'] ?? $existing['order'],
                 isset($data['isActive']) ? ($data['isActive'] ? 1 : 0) : $existing['isActive'],
                 $id,

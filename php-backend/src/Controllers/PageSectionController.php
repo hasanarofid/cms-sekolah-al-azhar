@@ -10,19 +10,26 @@ class PageSectionController extends BaseController
     public function index($pageId)
     {
         if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            // Get all sections and filter active ones (more flexible with boolean handling)
+            // Get all sections
             $sections = $this->db->fetchAll(
                 'SELECT * FROM PageSection WHERE pageId = ? ORDER BY `order` ASC',
                 [$pageId]
             );
             
-            // Filter active sections (handle both boolean and integer)
-            $sections = array_filter($sections, function($section) {
-                return $section['isActive'] !== false && $section['isActive'] !== 0 && $section['isActive'] !== '0';
-            });
+            // Check if this is an admin request (authenticated)
+            // For admin, show all sections (including inactive)
+            // For public, only show active sections
+            $isAdmin = $this->isAuthenticated();
             
-            // Re-index array after filtering
-            $sections = array_values($sections);
+            if (!$isAdmin) {
+                // Public: filter active sections (handle both boolean and integer)
+                $sections = array_filter($sections, function($section) {
+                    return $section['isActive'] !== false && $section['isActive'] !== 0 && $section['isActive'] !== '0';
+                });
+                
+                // Re-index array after filtering
+                $sections = array_values($sections);
+            }
 
             // Parse images JSON to array
             foreach ($sections as &$section) {

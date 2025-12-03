@@ -14,7 +14,7 @@ import { PartnershipsItemsManager } from './PartnershipsItemsManager'
 import { Select2 } from './Select2'
 
 const sectionSchema = z.object({
-  type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'faq', 'figures', 'partnerships', 'news-section']),
+  type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'faq', 'figures', 'partnerships', 'news-section', 'maps']),
   title: z.string().optional(),
   titleEn: z.string().optional(),
   subtitle: z.string().optional(),
@@ -58,6 +58,7 @@ const sectionSchema = z.object({
     category: z.enum(['international', 'health', 'student-escort']),
     order: z.number(),
   })).optional(),
+  mapEmbedUrl: z.string().optional(),
   order: z.number().int().min(0).default(0),
   isActive: z.boolean().default(true),
 })
@@ -85,10 +86,11 @@ interface HomeSectionFormProps {
     faqItems?: string | any[] | null
     figures?: string | any[] | null
     partnerships?: string | any[] | null
+    mapEmbedUrl?: string | null
     order: number
     isActive: boolean
   }
-  defaultType?: 'motto' | 'video-profile' | 'admission' | 'feature' | 'split-screen' | 'masjid-al-fatih' | 'university-map' | 'global-stage' | 'faq' | 'figures' | 'partnerships' | 'news-section'
+  defaultType?: 'motto' | 'video-profile' | 'admission' | 'feature' | 'split-screen' | 'masjid-al-fatih' | 'university-map' | 'global-stage' | 'faq' | 'figures' | 'partnerships' | 'news-section' | 'maps'
 }
 
 export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) {
@@ -159,7 +161,7 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
     resolver: zodResolver(sectionSchema),
     defaultValues: section
       ? {
-          type: section.type as 'motto' | 'video-profile' | 'admission' | 'feature' | 'split-screen' | 'masjid-al-fatih' | 'university-map' | 'global-stage' | 'faq' | 'figures' | 'partnerships' | 'news-section',
+          type: section.type as 'motto' | 'video-profile' | 'admission' | 'feature' | 'split-screen' | 'masjid-al-fatih' | 'university-map' | 'global-stage' | 'faq' | 'figures' | 'partnerships' | 'news-section' | 'maps',
           title: section.title || undefined,
           titleEn: section.titleEn || undefined,
           subtitle: section.subtitle || undefined,
@@ -176,6 +178,7 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
           buttonUrl: section.buttonUrl || undefined,
           faqItems: parseFAQItems(),
           figures: parseFigures(),
+          mapEmbedUrl: section.mapEmbedUrl || undefined,
           order: section.order ?? 0,
           isActive: section.isActive ?? true,
         }
@@ -198,6 +201,7 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
           buttonTextEn: undefined,
           buttonUrl: undefined,
           faqItems: undefined,
+          mapEmbedUrl: undefined,
         },
   } as any)
 
@@ -389,6 +393,7 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
         faqItems: sectionType === 'faq' && faqItems.length > 0 ? JSON.stringify(faqItems) : null,
         figures: sectionType === 'figures' && figures.length > 0 ? JSON.stringify(figures) : null,
         partnerships: sectionType === 'partnerships' && partnerships.length > 0 ? JSON.stringify(partnerships) : null,
+        mapEmbedUrl: sectionType === 'maps' ? (data.mapEmbedUrl || null) : null,
         order: data.order || 0,
         isActive: data.isActive !== undefined ? data.isActive : true,
       }
@@ -452,6 +457,7 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
             { value: 'figures', label: 'Figures / Tokoh-Tokoh' },
             { value: 'partnerships', label: 'Partnerships / Kerjasama' },
             { value: 'news-section', label: 'News Section (Berita)' },
+            { value: 'maps', label: 'Maps (Peta)' },
           ]}
           placeholder="Pilih tipe section..."
           isSearchable={true}
@@ -878,6 +884,27 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
             )}
           </div>
         </>
+      )}
+
+      {/* Maps Section Fields */}
+      {sectionType === 'maps' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Google Maps Embed URL / Iframe *
+          </label>
+          <textarea
+            {...register('mapEmbedUrl')}
+            rows={6}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
+            placeholder="Paste iframe code atau embed URL dari Google Maps. Contoh: &lt;iframe src=&quot;https://www.google.com/maps/embed?pb=...&quot; width=&quot;600&quot; height=&quot;450&quot; style=&quot;border:0;&quot; allowfullscreen=&quot;&quot; loading=&quot;lazy&quot; referrerpolicy=&quot;no-referrer-when-downgrade&quot;&gt;&lt;/iframe&gt;"
+          />
+          <p className="mt-1 text-sm text-gray-500">
+            Paste seluruh iframe code atau hanya URL src dari Google Maps embed
+          </p>
+          {errors.mapEmbedUrl && (
+            <p className="mt-1 text-sm text-red-600">{errors.mapEmbedUrl.message}</p>
+          )}
+        </div>
       )}
 
       <div className="grid grid-cols-2 gap-4">

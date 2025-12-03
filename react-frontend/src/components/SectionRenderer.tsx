@@ -21,6 +21,7 @@ import { CurriculumTableSection } from './CurriculumTableSection'
 import { AcademicCalendarSection } from './AcademicCalendarSection'
 import { BOSReportSection } from './BOSReportSection'
 import { ContactSection } from './ContactSection'
+import { MapsSection } from './MapsSection'
 import { parseImages } from '../lib/utils-images'
 import { getImageUrl, getImageUrls } from '../lib/utils-image-url'
 
@@ -622,6 +623,17 @@ export function SectionRenderer({
   if (section.type === 'contact') {
     return (
       <ContactSection
+        key={section.id}
+        section={section as any}
+        locale={locale}
+      />
+    )
+  }
+
+  // Maps Section
+  if (section.type === 'maps') {
+    return (
+      <MapsSection
         key={section.id}
         section={section as any}
         locale={locale}
