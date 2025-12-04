@@ -45,11 +45,36 @@ export const apiClient = {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-      throw new Error(error.error || 'Request failed');
+      // Check if response is JSON before trying to parse
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(error.error || 'Request failed');
+      } else {
+        // If not JSON, get text response
+        const text = await response.text().catch(() => 'Request failed');
+        throw new Error(text || 'Request failed');
+      }
     }
 
-    return response.json();
+    // Check if response is JSON before trying to parse
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return response.json();
+    } else {
+      // If not JSON, return empty array or null based on context
+      const text = await response.text();
+      // Try to parse as JSON if it looks like JSON
+      try {
+        return JSON.parse(text);
+      } catch {
+        // If parsing fails, return empty array for list endpoints, null for others
+        if (endpoint.includes('/admin/')) {
+          return [];
+        }
+        return null;
+      }
+    }
   },
 
   async post(endpoint: string, data: any, includeAuth = true) {
