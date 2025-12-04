@@ -28,6 +28,19 @@ export default function MenusPage() {
     }
   }
 
+  async function toggleMenuActive(menuId: string, currentStatus: boolean) {
+    try {
+      await apiClient.put(`/admin/menus/${menuId}/update`, {
+        isActive: !currentStatus
+      })
+      // Reload menus setelah update
+      await loadMenus()
+    } catch (error) {
+      console.error('Error toggling menu status:', error)
+      alert('Gagal mengubah status menu')
+    }
+  }
+
   if (loading) {
     return (
       <AdminLayout>
@@ -63,14 +76,32 @@ export default function MenusPage() {
                 menus.map((menu) => (
                   <div key={menu.id} className="p-6">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold">{menu.title}</h3>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-semibold">{menu.title}</h3>
+                          <span className={`px-2 py-0.5 text-xs rounded-full ${
+                            menu.isActive 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {menu.isActive ? 'Aktif' : 'Nonaktif'}
+                          </span>
+                        </div>
                         {menu.titleEn && (
                           <p className="text-sm text-gray-600">{menu.titleEn}</p>
                         )}
                         <p className="text-sm text-gray-500">/{menu.slug}</p>
                       </div>
                       <div className="flex items-center space-x-2">
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={menu.isActive === 1 || menu.isActive === true}
+                            onChange={() => toggleMenuActive(menu.id, menu.isActive === 1 || menu.isActive === true)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                        </label>
                         <Link
                           to={`/admin/menus/${menu.id}`}
                           className="text-primary-600 hover:text-primary-700"
@@ -90,14 +121,32 @@ export default function MenusPage() {
                         {menu.children.map((child: any) => (
                           <div key={child.id}>
                             <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                              <div>
-                                <p className="font-medium">{child.title}</p>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium">{child.title}</p>
+                                  <span className={`px-2 py-0.5 text-xs rounded-full ${
+                                    child.isActive 
+                                      ? 'bg-green-100 text-green-800' 
+                                      : 'bg-gray-100 text-gray-600'
+                                  }`}>
+                                    {child.isActive ? 'Aktif' : 'Nonaktif'}
+                                  </span>
+                                </div>
                                 {child.titleEn && (
                                   <p className="text-sm text-gray-600">{child.titleEn}</p>
                                 )}
                                 <p className="text-sm text-gray-500">/{child.slug}</p>
                               </div>
                               <div className="flex items-center space-x-2">
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={child.isActive === 1 || child.isActive === true}
+                                    onChange={() => toggleMenuActive(child.id, child.isActive === 1 || child.isActive === true)}
+                                    className="sr-only peer"
+                                  />
+                                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                                </label>
                                 <Link
                                   to={`/admin/menus/${child.id}`}
                                   className="text-primary-600 hover:text-primary-700"
@@ -120,14 +169,32 @@ export default function MenusPage() {
                                     key={grandchild.id}
                                     className="flex items-center justify-between p-3 bg-gray-100 rounded"
                                   >
-                                    <div>
-                                      <p className="font-medium text-sm">{grandchild.title}</p>
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2">
+                                        <p className="font-medium text-sm">{grandchild.title}</p>
+                                        <span className={`px-2 py-0.5 text-xs rounded-full ${
+                                          grandchild.isActive 
+                                            ? 'bg-green-100 text-green-800' 
+                                            : 'bg-gray-100 text-gray-600'
+                                        }`}>
+                                          {grandchild.isActive ? 'Aktif' : 'Nonaktif'}
+                                        </span>
+                                      </div>
                                       {grandchild.titleEn && (
                                         <p className="text-xs text-gray-600">{grandchild.titleEn}</p>
                                       )}
                                       <p className="text-xs text-gray-500">/{grandchild.slug}</p>
                                     </div>
                                     <div className="flex items-center space-x-2">
+                                      <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                          type="checkbox"
+                                          checked={grandchild.isActive === 1 || grandchild.isActive === true}
+                                          onChange={() => toggleMenuActive(grandchild.id, grandchild.isActive === 1 || grandchild.isActive === true)}
+                                          className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                                      </label>
                                       <Link
                                         to={`/admin/menus/${grandchild.id}`}
                                         className="text-primary-600 hover:text-primary-700"

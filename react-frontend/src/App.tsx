@@ -27,11 +27,14 @@ import PostNewPage from './routes/admin/PostNewPage'
 import PostEditPage from './routes/admin/PostEditPage'
 import ContactsPage from './routes/admin/ContactsPage'
 import MenusPage from './routes/admin/MenusPage'
+import MenuEditPage from './routes/admin/MenuEditPage'
+import MenuNewPage from './routes/admin/MenuNewPage'
 import CategoriesPage from './routes/admin/CategoriesPage'
 import SettingsPage from './routes/admin/SettingsPage'
 import SEOPage from './routes/admin/SEOPage'
 import PlaceholderPage from './routes/admin/PlaceholderPage'
 import NotFound from './routes/NotFound'
+import NotFoundPage from './routes/NotFoundPage'
 import './index.css'
 
 function App() {
@@ -42,6 +45,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/berita/:slug" element={<PostPage />} />
         <Route path="/kontak" element={<ContactPage />} />
+        <Route path="/404" element={<NotFoundPage />} />
         <Route path="/:slug" element={<DynamicPage />} />
         
         {/* Auth Routes */}
@@ -70,6 +74,8 @@ function App() {
         <Route path="/admin/posts/:id" element={<PostEditPage />} />
         <Route path="/admin/contacts" element={<ContactsPage />} />
         <Route path="/admin/menus" element={<MenusPage />} />
+        <Route path="/admin/menus/new" element={<MenuNewPage />} />
+        <Route path="/admin/menus/:id" element={<MenuEditPage />} />
         <Route path="/admin/categories" element={<CategoriesPage />} />
         <Route path="/admin/settings" element={<SettingsPage />} />
         <Route path="/admin/seo" element={<SEOPage />} />

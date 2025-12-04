@@ -10,6 +10,7 @@ import { apiClient } from '../lib/api-client'
 import { getImageUrl } from '../lib/utils-image-url'
 import { useSettings } from '../lib/use-settings'
 import { useSEO } from '../lib/use-seo'
+import NotFound from './NotFound'
 
 export default function DynamicPage() {
   const params = useParams()
@@ -24,6 +25,7 @@ export default function DynamicPage() {
   const [settings, setSettings] = useState<any>({})
   const [seo, setSeo] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
 
   // Apply settings (favicon, title) ke document
   useSettings(settings)
@@ -154,11 +156,32 @@ export default function DynamicPage() {
             if (globalSeo) setSeo(globalSeo)
           }
         } else {
-          navigate('/404')
+          setNotFound(true)
           return
         }
 
-        setMenus(menusData.filter((m: any) => !m.parentId && m.isActive))
+        // Filter menus dengan struktur yang sama seperti HomePage
+        const filteredMenus = menusData
+          .filter((menu: any) => !menu.parentId && menu.isActive)
+          .map((menu: any) => ({
+            ...menu,
+            titleEn: menu.titleEn ?? undefined,
+            children: (menu.children || [])
+              .filter((child: any) => child.isActive)
+              .map((child: any) => ({
+                ...child,
+                titleEn: child.titleEn ?? undefined,
+                children: (child.children || [])
+                  .filter((grandchild: any) => grandchild.isActive)
+                  .map((grandchild: any) => ({
+                    ...grandchild,
+                    titleEn: grandchild.titleEn ?? undefined,
+                  })),
+              })),
+          }))
+          .sort((a: any, b: any) => a.order - b.order)
+
+        setMenus(filteredMenus)
         setSettings(settingsData)
       } catch (error) {
         console.error('Error loading data:', error)
@@ -179,6 +202,36 @@ export default function DynamicPage() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Memuat...</p>
         </div>
+      </div>
+    )
+  }
+
+  if (notFound) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navigation 
+          menus={menus} 
+          locale={locale}
+          logo={settings.website_logo?.value || null}
+          websiteName={settings.website_title?.value || null}
+          showWebsiteName={settings.show_website_name?.value === 'true'}
+        />
+        <NotFound withoutLayout={true} />
+        <Footer 
+          locale={locale}
+          logo={settings.website_logo?.value || null}
+          websiteName={settings.website_title?.value || null}
+          address={settings.footer_address?.value || null}
+          phone={settings.footer_phone?.value || null}
+          email={settings.footer_email?.value || null}
+          facebookUrl={settings.facebook_url?.value || null}
+          instagramUrl={settings.instagram_url?.value || null}
+          youtubeUrl={settings.youtube_url?.value || null}
+        />
+        <WhatsAppButton 
+          phoneNumber={settings.whatsapp_phone?.value || null}
+          defaultMessage={settings.whatsapp_message?.value || null}
+        />
       </div>
     )
   }
