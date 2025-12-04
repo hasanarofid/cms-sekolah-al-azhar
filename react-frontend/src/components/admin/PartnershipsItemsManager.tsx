@@ -205,7 +205,7 @@ export function PartnershipsItemsManager({ value, onChange }: PartnershipsItemsM
                               onChange={(e) => handleChange(item.id, 'category', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                             >
-                              <option value="international">Kerjasama Internasional</option>
+                              <option value="international">Kerjasama</option>
                               <option value="health">Kerjasama Kesehatan</option>
                               <option value="student-escort">Kerjasama Pengawalan Siswa</option>
                             </select>

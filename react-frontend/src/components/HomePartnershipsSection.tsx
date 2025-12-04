@@ -71,8 +71,7 @@ export function HomePartnershipsSection({ section, locale = 'id' }: HomePartners
             <div key={category} className="mb-16 last:mb-0">
               {/* Category Title - Match reference: centered, dark blue, large font */}
               <h2 
-                className="text-3xl md:text-4xl font-bold text-center mb-10"
-                style={{ color: '#1e3a8a' }}
+                className="text-3xl md:text-4xl font-bold text-center mb-10 text-primary-600"
               >
                 {displayLabel}
               </h2>
@@ -105,11 +104,11 @@ export function HomePartnershipsSection({ section, locale = 'id' }: HomePartners
                       
                       {/* Name and Location */}
                       <div className="text-center">
-                        <p className="text-sm md:text-base text-gray-800 font-medium mb-1">
+                        <p className="text-sm md:text-base text-primary-600 font-medium mb-1">
                           {displayName}
                         </p>
                         {displayLocation && (
-                          <p className="text-xs md:text-sm text-gray-600">
+                          <p className="text-xs md:text-sm text-primary-600">
                             {displayLocation}
                           </p>
                         )}
