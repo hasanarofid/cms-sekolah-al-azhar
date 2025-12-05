@@ -184,12 +184,20 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
   
   // Parse items from section (could be JSON string or array)
   const parseItems = (items: any) => {
-    if (!items) return []
-    if (Array.isArray(items)) return items
+    if (!items) {
+      console.log('parseItems: items is null/undefined')
+      return []
+    }
+    if (Array.isArray(items)) {
+      console.log('parseItems: items is already array:', items)
+      return items
+    }
     try {
       const parsed = JSON.parse(items)
+      console.log('parseItems: parsed JSON:', parsed)
       return Array.isArray(parsed) ? parsed : []
-    } catch {
+    } catch (err) {
+      console.error('parseItems: JSON parse error:', err, 'Items:', items)
       return []
     }
   }
@@ -203,7 +211,22 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
   const [achievementItems, setAchievementItems] = useState<any[]>(parseItems((section as any)?.achievementItems))
   const [curriculumItems, setCurriculumItems] = useState<any[]>(parseItems((section as any)?.curriculumItems))
   const [calendarItems, setCalendarItems] = useState<any[]>(parseItems((section as any)?.calendarItems))
-  const [documentItems, setDocumentItems] = useState<any[]>(parseItems((section as any)?.documentItems))
+  const [documentItems, setDocumentItems] = useState<any[]>(() => {
+    const parsed = parseItems((section as any)?.documentItems)
+    console.log('=== LOADING DOCUMENT ITEMS ===')
+    console.log('Raw section.documentItems:', (section as any)?.documentItems)
+    console.log('Parsed documentItems:', parsed)
+    parsed.forEach((item: any, index: number) => {
+      console.log(`Document Item ${index}:`, {
+        id: item.id,
+        nama: item.nama,
+        fileUrl: item.fileUrl,
+        fileName: item.fileName,
+        order: item.order
+      })
+    })
+    return parsed
+  })
   
   const [previewBadgeImage, setPreviewBadgeImage] = useState<string | null>(
     (section as any)?.badgeImage ? getImageUrl((section as any).badgeImage) : null
@@ -415,7 +438,32 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
         achievementItems: sectionType === 'student-achievements' && achievementItems.length > 0 ? JSON.stringify(achievementItems) : null,
         curriculumItems: sectionType === 'curriculum-table' && curriculumItems.length > 0 ? JSON.stringify(curriculumItems) : null,
         calendarItems: sectionType === 'academic-calendar' && calendarItems.length > 0 ? JSON.stringify(calendarItems) : null,
-        documentItems: sectionType === 'bos-report' && documentItems.length > 0 ? JSON.stringify(documentItems) : null,
+        documentItems: sectionType === 'bos-report' && documentItems.length > 0 ? (() => {
+          console.log('=== SAVING DOCUMENT ITEMS ===')
+          console.log('documentItems before filter:', documentItems)
+          
+          // Filter hanya item yang memiliki fileUrl (wajib untuk preview)
+          const validItems = documentItems.filter(item => {
+            const hasFileUrl = item.fileUrl && item.fileUrl.trim() !== ''
+            if (!hasFileUrl) {
+              console.warn('Skipping item without fileUrl:', item)
+            }
+            return hasFileUrl
+          })
+          
+          console.log('documentItems after filter (with fileUrl):', validItems)
+          
+          if (validItems.length === 0) {
+            console.warn('WARNING: Tidak ada documentItems yang valid (semua tidak punya fileUrl)!')
+            console.warn('Semua items:', documentItems)
+            // Tetap kirim array kosong atau null, jangan kirim item tanpa fileUrl
+            return null
+          }
+          
+          const jsonString = JSON.stringify(validItems)
+          console.log('documentItems JSON string:', jsonString)
+          return jsonString
+        })() : null,
         address: sectionType === 'contact' ? (data.address || null) : null,
         addressEn: sectionType === 'contact' ? (data.addressEn || null) : null,
         email: sectionType === 'contact' ? (data.email || null) : null,
@@ -426,11 +474,19 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
         isActive: data.isActive !== undefined ? data.isActive : true,
       }
       
+      console.log('=== FORM SUBMIT ===')
+      console.log('Section type:', sectionType)
+      console.log('Form data to send:', formData)
+      
       if (section) {
+        console.log('Updating section:', section.id)
         await apiClient.put(`/admin/page-sections/${section.id}`, formData)
       } else {
+        console.log('Creating new section')
         await apiClient.post(`/admin/pages/${pageId}/sections/create`, formData)
       }
+      
+      console.log('Section saved successfully!')
 
       if (onSuccess) {
         onSuccess()

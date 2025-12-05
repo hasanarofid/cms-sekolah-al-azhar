@@ -42,9 +42,24 @@ export function DocumentItemsManager({ value, onChange }: DocumentItemsManagerPr
   }
 
   const updateItem = (id: string, field: keyof DocumentItem, fieldValue: any) => {
-    onChange(value.map(item => 
-      item.id === id ? { ...item, [field]: fieldValue } : item
-    ))
+    console.log('updateItem called:', { id, field, fieldValue })
+    console.log('Current value before update:', value)
+    
+    const updatedItems = value.map(item => {
+      if (item.id === id) {
+        const updated = { ...item, [field]: fieldValue }
+        console.log('Item updated:', { from: item, to: updated })
+        return updated
+      }
+      return item
+    })
+    
+    console.log('Updated items array:', updatedItems)
+    onChange(updatedItems)
+    
+    // Verify update
+    const verifyItem = updatedItems.find(item => item.id === id)
+    console.log('Verification after updateItem:', verifyItem)
   }
 
   const toggleExpand = (id: string) => {
@@ -77,14 +92,65 @@ export function DocumentItemsManager({ value, onChange }: DocumentItemsManagerPr
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Reset input untuk memungkinkan upload file yang sama lagi
+    e.target.value = ''
+
+    console.log('=== FILE UPLOAD START ===')
+    console.log('Item ID:', itemId)
+    console.log('File name:', file.name)
+    console.log('File size:', file.size)
+    console.log('File type:', file.type)
+    console.log('Current value before upload:', value)
+
     setUploading({ itemId })
     try {
       const data = await apiClient.upload('/admin/upload', file, 'documents', true, false, true)
-      const fileUrl = data.url || data.path || ''
-      if (fileUrl) {
-        updateItem(itemId, 'fileUrl', fileUrl)
-        updateItem(itemId, 'fileName', file.name)
+      console.log('Upload response (full):', JSON.stringify(data, null, 2))
+      
+      // Coba berbagai kemungkinan field dari response
+      const fileUrl = data.url || data.path || data.fileUrl || data.location || ''
+      console.log('Extracted fileUrl:', fileUrl)
+      console.log('Response keys:', Object.keys(data))
+      
+      if (!fileUrl || fileUrl.trim() === '') {
+        console.error('fileUrl is empty after upload!')
+        console.error('Full response data:', data)
+        alert('Upload berhasil tapi fileUrl tidak ditemukan dalam response. Silakan hubungi administrator.\n\nResponse: ' + JSON.stringify(data))
+        return
       }
+
+      console.log('Updating item with fileUrl:', fileUrl)
+      console.log('Updating item with fileName:', file.name)
+      
+      // Update kedua field sekaligus dalam satu operasi untuk menghindari race condition
+      const updatedItems = value.map(item => {
+        if (item.id === itemId) {
+          const updated = {
+            ...item,
+            fileUrl: fileUrl,
+            fileName: file.name
+          }
+          console.log('Item before update:', item)
+          console.log('Item after update:', updated)
+          return updated
+        }
+        return item
+      })
+      
+      console.log('Updated items array:', updatedItems)
+      onChange(updatedItems)
+      
+      // Verify the update setelah state update
+      setTimeout(() => {
+        const verifyItem = updatedItems.find(item => item.id === itemId)
+        console.log('Verification - Updated item:', verifyItem)
+        if (!verifyItem || !verifyItem.fileUrl || verifyItem.fileUrl.trim() === '') {
+          console.error('VERIFICATION FAILED: fileUrl masih kosong setelah update!')
+        } else {
+          console.log('VERIFICATION SUCCESS: fileUrl berhasil diupdate:', verifyItem.fileUrl)
+        }
+      }, 100)
+      
     } catch (err: any) {
       console.error('Upload error:', err)
       alert(err.message || 'Gagal mengupload file')
