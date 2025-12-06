@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { Upload, X, Loader2 } from 'lucide-react'
 import { apiClient } from '../../lib/api-client'
 import { getImageUrl } from '../../lib/utils-image-url'
+import { useFlashMessage } from '../../hooks/useFlashMessage'
 
 const youtubeUrlRegex = /(youtube\.com\/(watch\?v=|embed\/|shorts\/)|youtu\.be\/)/i
 
@@ -53,6 +54,7 @@ interface SliderFormProps {
 
 export function SliderForm({ slider }: SliderFormProps) {
   const navigate = useNavigate()
+  const { showSuccess } = useFlashMessage()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -210,6 +212,7 @@ export function SliderForm({ slider }: SliderFormProps) {
           videoDuration: videoDuration || null,
           buttonUrl: data.buttonUrl || null,
         })
+        showSuccess('Slider berhasil diperbarui!', 3000, true)
       } else {
         await apiClient.post('/admin/sliders/create', {
           ...data,
@@ -218,6 +221,7 @@ export function SliderForm({ slider }: SliderFormProps) {
           videoDuration: videoDuration || null,
           buttonUrl: data.buttonUrl || null,
         })
+        showSuccess('Slider berhasil ditambahkan!', 3000, true)
       }
 
       navigate('/admin/sliders')

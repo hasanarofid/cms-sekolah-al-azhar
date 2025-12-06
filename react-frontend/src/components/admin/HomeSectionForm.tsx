@@ -12,6 +12,8 @@ import { FAQItemsManager } from './FAQItemsManager'
 import { FiguresItemsManager } from './FiguresItemsManager'
 import { PartnershipsItemsManager } from './PartnershipsItemsManager'
 import { Select2 } from './Select2'
+import { useFlashMessage } from '../../hooks/useFlashMessage'
+import { FlashMessage } from './FlashMessage'
 
 const sectionSchema = z.object({
   type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'faq', 'figures', 'partnerships', 'news-section', 'maps']),
@@ -60,7 +62,10 @@ const sectionSchema = z.object({
   })).optional(),
   mapEmbedUrl: z.string().optional(),
   order: z.number().int().min(0).default(0),
-  isActive: z.boolean().default(true),
+  isActive: z.union([z.boolean(), z.number()]).transform((val) => {
+    if (typeof val === 'number') return val === 1
+    return val === true
+  }).default(true),
 })
 
 type SectionFormData = z.infer<typeof sectionSchema>
@@ -95,6 +100,7 @@ interface HomeSectionFormProps {
 
 export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) {
   const navigate = useNavigate()
+  const { flashMessage, showSuccess } = useFlashMessage()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -156,9 +162,11 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
     handleSubmit,
     setValue,
     watch,
+    trigger,
     formState: { errors },
   } = useForm<SectionFormData>({
     resolver: zodResolver(sectionSchema),
+    mode: 'onChange',
     defaultValues: section
       ? {
           type: section.type as 'motto' | 'video-profile' | 'admission' | 'feature' | 'split-screen' | 'masjid-al-fatih' | 'university-map' | 'global-stage' | 'faq' | 'figures' | 'partnerships' | 'news-section' | 'maps',
@@ -180,7 +188,7 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
           figures: parseFigures(),
           mapEmbedUrl: section.mapEmbedUrl || undefined,
           order: section.order ?? 0,
-          isActive: section.isActive ?? true,
+          isActive: typeof section.isActive === 'number' ? section.isActive === 1 : (section.isActive ?? true),
         }
       : {
           type: defaultType || 'feature',
@@ -395,13 +403,15 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
         partnerships: sectionType === 'partnerships' && partnerships.length > 0 ? JSON.stringify(partnerships) : null,
         mapEmbedUrl: sectionType === 'maps' ? (data.mapEmbedUrl || null) : null,
         order: data.order || 0,
-        isActive: data.isActive !== undefined ? data.isActive : true,
+        isActive: data.isActive !== undefined ? Boolean(data.isActive) : true,
       }
       
       if (section) {
         await apiClient.put(`/admin/home-sections/${section.id}`, formData)
+        showSuccess('Section berhasil diperbarui!', 3000, true)
       } else {
         await apiClient.post('/admin/home-sections/create', formData)
+        showSuccess('Section berhasil ditambahkan!', 3000, true)
       }
 
       navigate('/admin/home-sections')
@@ -418,6 +428,13 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
       console.error('Form validation errors:', errors)
       setError('Mohon lengkapi semua field yang wajib diisi')
     })} className="bg-white rounded-lg shadow p-6 space-y-6">
+      {flashMessage.show && (
+        <FlashMessage
+          message={flashMessage.message}
+          type={flashMessage.type}
+          onClose={() => {}}
+        />
+      )}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
           {error}
@@ -442,7 +459,8 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
           name="type"
           value={sectionType}
           onChange={(value) => {
-            setValue('type', value as any, { shouldValidate: true })
+            setValue('type', value as any, { shouldValidate: true, shouldDirty: true, shouldTouch: true })
+            trigger('type')
           }}
           options={[
             { value: 'motto', label: 'Motto' },
@@ -462,6 +480,10 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
           placeholder="Pilih tipe section..."
           isSearchable={true}
           error={errors.type?.message}
+        />
+        <input
+          {...register('type')}
+          type="hidden"
         />
       </div>
 

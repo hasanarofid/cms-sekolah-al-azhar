@@ -7,6 +7,7 @@ import { Upload, X, Loader2 } from 'lucide-react'
 import { apiClient } from '../../lib/api-client'
 import { getImageUrl } from '../../lib/utils-image-url'
 import { RichTextEditor } from './RichTextEditor'
+import { useFlashMessage } from '../../hooks/useFlashMessage'
 
 const faqSchema = z.object({
   question: z.string().min(1, 'Pertanyaan wajib diisi'),
@@ -39,6 +40,7 @@ interface FAQFormProps {
 
 export function FAQForm({ faq }: FAQFormProps) {
   const navigate = useNavigate()
+  const { showSuccess } = useFlashMessage()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -124,8 +126,10 @@ export function FAQForm({ faq }: FAQFormProps) {
     try {
       if (faq) {
         await apiClient.put(`/admin/faqs/${faq.id}`, data)
+        showSuccess('FAQ berhasil diperbarui!', 3000, true)
       } else {
         await apiClient.post('/admin/faqs/create', data)
+        showSuccess('FAQ berhasil ditambahkan!', 3000, true)
       }
 
       navigate('/admin/faqs')

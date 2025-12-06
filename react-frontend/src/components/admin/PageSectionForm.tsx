@@ -134,7 +134,10 @@ const sectionSchema = z.object({
   phone: z.string().optional(),
   mapEmbedUrl: z.string().optional(),
   order: z.number().int().min(0).default(0),
-  isActive: z.boolean().default(true),
+  isActive: z.union([z.boolean(), z.number()]).transform((val) => {
+    if (typeof val === 'number') return val === 1
+    return val === true
+  }).default(true),
 })
 
 type SectionFormData = z.infer<typeof sectionSchema>
@@ -237,9 +240,11 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
     handleSubmit,
     setValue,
     watch,
+    trigger,
     formState: { errors },
   } = useForm<SectionFormData>({
     resolver: zodResolver(sectionSchema),
+    mode: 'onChange',
     defaultValues: section
       ? {
           type: section.type as any,
@@ -274,7 +279,7 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
           phone: (section as any)?.phone || undefined,
           mapEmbedUrl: (section as any)?.mapEmbedUrl || undefined,
           order: section.order ?? 0,
-          isActive: section.isActive ?? true,
+          isActive: typeof section.isActive === 'number' ? section.isActive === 1 : (section.isActive ?? true),
         }
       : {
           type: 'feature',
@@ -471,7 +476,7 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
         mapEmbedUrl: (sectionType === 'contact' || sectionType === 'maps') ? (data.mapEmbedUrl || null) : null,
         faqItems: sectionType === 'faq' && faqItems.length > 0 ? JSON.stringify(faqItems) : null,
         order: data.order || 0,
-        isActive: data.isActive !== undefined ? data.isActive : true,
+        isActive: data.isActive !== undefined ? Boolean(data.isActive) : true,
       }
       
       console.log('=== FORM SUBMIT ===')
@@ -528,7 +533,8 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
           name="type"
           value={sectionType}
           onChange={(value) => {
-            setValue('type', value as any, { shouldValidate: true })
+            setValue('type', value as any, { shouldValidate: true, shouldDirty: true, shouldTouch: true })
+            trigger('type')
           }}
           options={[
             { value: 'motto', label: 'Motto' },
@@ -557,6 +563,10 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
           placeholder="Pilih tipe section..."
           isSearchable={true}
           error={errors.type?.message}
+        />
+        <input
+          {...register('type')}
+          type="hidden"
         />
       </div>
 

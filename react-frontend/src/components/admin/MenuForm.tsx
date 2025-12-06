@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react'
 import { apiClient } from '../../lib/api-client'
 import { slugify } from '../../lib/utils'
 import { Select2 } from './Select2'
+import { useFlashMessage } from '../../hooks/useFlashMessage'
 
 interface Menu {
   id: string
@@ -28,6 +29,7 @@ interface MenuFormProps {
 
 export function MenuForm({ menu, allMenus = [] }: MenuFormProps) {
   const navigate = useNavigate()
+  const { showSuccess } = useFlashMessage()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -124,9 +126,11 @@ export function MenuForm({ menu, allMenus = [] }: MenuFormProps) {
       if (menu) {
         // Update existing menu
         await apiClient.put(`/admin/menus/${menu.id}/update`, payload)
+        showSuccess('Menu berhasil diperbarui!', 3000, true)
       } else {
         // Create new menu
         await apiClient.post('/admin/menus/create', payload)
+        showSuccess('Menu berhasil ditambahkan!', 3000, true)
       }
 
       navigate('/admin/menus')

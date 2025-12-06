@@ -5,8 +5,11 @@ import { AdminLayout } from '../../components/admin/AdminLayout'
 import { apiClient } from '../../lib/api-client'
 import { DeleteButton } from '../../components/admin/DeleteButton'
 import { StatusToggleButton } from '../../components/admin/StatusToggleButton'
+import { useFlashMessage } from '../../hooks/useFlashMessage'
+import { FlashMessage } from '../../components/admin/FlashMessage'
 
 export default function HomeSectionsPage() {
+  const { flashMessage } = useFlashMessage()
   const [sections, setSections] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -39,6 +42,13 @@ export default function HomeSectionsPage() {
     <AdminLayout>
       <div className="w-full">
         <div className="max-w-7xl mx-auto">
+          {flashMessage.show && (
+            <FlashMessage
+              message={flashMessage.message}
+              type={flashMessage.type}
+              onClose={() => {}}
+            />
+          )}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Kelola Home Sections</h1>
             <Link

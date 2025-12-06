@@ -4,8 +4,11 @@ import { Plus, Edit } from 'lucide-react'
 import { AdminLayout } from '../../components/admin/AdminLayout'
 import { apiClient } from '../../lib/api-client'
 import { DeleteButton } from '../../components/admin/DeleteButton'
+import { useFlashMessage } from '../../hooks/useFlashMessage'
+import { FlashMessage } from '../../components/admin/FlashMessage'
 
 export default function MenusPage() {
+  const { flashMessage } = useFlashMessage()
   const [menus, setMenus] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -55,6 +58,13 @@ export default function MenusPage() {
     <AdminLayout>
       <div className="w-full">
         <div className="max-w-7xl mx-auto">
+          {flashMessage.show && (
+            <FlashMessage
+              message={flashMessage.message}
+              type={flashMessage.type}
+              onClose={() => {}}
+            />
+          )}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Kelola Menu</h1>
             <Link

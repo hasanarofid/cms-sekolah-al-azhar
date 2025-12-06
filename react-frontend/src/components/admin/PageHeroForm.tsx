@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { Upload, Loader2 } from 'lucide-react'
 import { apiClient } from '../../lib/api-client'
 import { getImageUrl } from '../../lib/utils-image-url'
+import { useFlashMessage } from '../../hooks/useFlashMessage'
 
 const heroSchema = z.object({
   title: z.string().optional(),
@@ -33,6 +34,7 @@ interface PageHeroFormProps {
 }
 
 export function PageHeroForm({ pageId, hero, onSuccess, onCancel }: PageHeroFormProps) {
+  const { showSuccess } = useFlashMessage()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -123,9 +125,11 @@ export function PageHeroForm({ pageId, hero, onSuccess, onCancel }: PageHeroForm
       if (hero?.id) {
         // Update existing hero
         await apiClient.put(`/admin/page-heroes/${hero.id}`, formData)
+        showSuccess('Hero berhasil diperbarui!')
       } else {
         // Create new hero
         await apiClient.post(`/admin/pages/${pageId}/hero/create`, formData)
+        showSuccess('Hero berhasil ditambahkan!')
       }
 
       if (onSuccess) {

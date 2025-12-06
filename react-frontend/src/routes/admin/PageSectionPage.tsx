@@ -6,9 +6,12 @@ import { apiClient } from '../../lib/api-client'
 import { DeleteButton } from '../../components/admin/DeleteButton'
 import { StatusToggleButton } from '../../components/admin/StatusToggleButton'
 import { PageSectionForm } from '../../components/admin/PageSectionForm'
+import { useFlashMessage } from '../../hooks/useFlashMessage'
+import { FlashMessage } from '../../components/admin/FlashMessage'
 
 export default function PageSectionPage() {
   const { pageId } = useParams<{ pageId: string }>()
+  const { flashMessage, showSuccess } = useFlashMessage()
   const [page, setPage] = useState<any>(null)
   const [sections, setSections] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -67,6 +70,7 @@ export default function PageSectionPage() {
               pageId={pageId!}
               section={editingSection}
               onSuccess={() => {
+                showSuccess(editingSection ? 'Section berhasil diperbarui!' : 'Section berhasil ditambahkan!')
                 setShowForm(false)
                 setEditingSection(null)
                 loadData()
@@ -86,6 +90,13 @@ export default function PageSectionPage() {
     <AdminLayout>
       <div className="w-full">
         <div className="max-w-7xl mx-auto">
+          {flashMessage.show && (
+            <FlashMessage
+              message={flashMessage.message}
+              type={flashMessage.type}
+              onClose={() => {}}
+            />
+          )}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">
               <Link

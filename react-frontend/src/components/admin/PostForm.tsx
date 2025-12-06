@@ -7,6 +7,7 @@ import { slugify } from '../../lib/utils'
 import { getImageUrl } from '../../lib/utils-image-url'
 import { RichTextEditor } from './RichTextEditor'
 import { Select2 } from './Select2'
+import { useFlashMessage } from '../../hooks/useFlashMessage'
 
 interface Post {
   id: string
@@ -35,6 +36,7 @@ interface PostFormProps {
 
 export function PostForm({ post, categories = [] }: PostFormProps) {
   const navigate = useNavigate()
+  const { showSuccess } = useFlashMessage()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -151,8 +153,10 @@ export function PostForm({ post, categories = [] }: PostFormProps) {
 
       if (post) {
         await apiClient.put(`/admin/posts/${post.id}`, postData)
+        showSuccess('Post berhasil diperbarui!', 3000, true)
       } else {
         await apiClient.post('/admin/posts/create', postData)
+        showSuccess('Post berhasil ditambahkan!', 3000, true)
       }
 
       navigate('/admin/posts')

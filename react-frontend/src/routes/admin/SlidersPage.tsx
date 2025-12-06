@@ -5,8 +5,11 @@ import { AdminLayout } from '../../components/admin/AdminLayout'
 import { apiClient } from '../../lib/api-client'
 import { DeleteButton } from '../../components/admin/DeleteButton'
 import { getImageUrl } from '../../lib/utils-image-url'
+import { useFlashMessage } from '../../hooks/useFlashMessage'
+import { FlashMessage } from '../../components/admin/FlashMessage'
 
 export default function SlidersPage() {
+  const { flashMessage } = useFlashMessage()
   const [sliders, setSliders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -62,6 +65,13 @@ export default function SlidersPage() {
     <AdminLayout>
       <div className="w-full">
         <div className="max-w-7xl mx-auto">
+          {flashMessage.show && (
+            <FlashMessage
+              message={flashMessage.message}
+              type={flashMessage.type}
+              onClose={() => {}}
+            />
+          )}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Kelola Slider</h1>
             <Link

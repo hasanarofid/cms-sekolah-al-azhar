@@ -8,6 +8,7 @@ import { getImageUrl } from '../../lib/utils-image-url'
 import { PageBlocksManager } from './PageBlocksManager'
 import { RichTextEditor } from './RichTextEditor'
 import { Select2 } from './Select2'
+import { useFlashMessage } from '../../hooks/useFlashMessage'
 
 interface Page {
   id: string
@@ -42,6 +43,7 @@ interface PageFormProps {
 
 export function PageForm({ page, menus = [] }: PageFormProps) {
   const navigate = useNavigate()
+  const { showSuccess } = useFlashMessage()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -144,6 +146,7 @@ export function PageForm({ page, menus = [] }: PageFormProps) {
           seoDescription: data.seoDescription || null,
           seoKeywords: data.seoKeywords || null,
         })
+        showSuccess('Halaman berhasil diperbarui!', 3000, true)
       } else {
         await apiClient.post('/admin/pages/create', {
           ...data,
@@ -154,6 +157,7 @@ export function PageForm({ page, menus = [] }: PageFormProps) {
           seoDescription: data.seoDescription || null,
           seoKeywords: data.seoKeywords || null,
         })
+        showSuccess('Halaman berhasil ditambahkan!', 3000, true)
       }
 
       navigate('/admin/pages')

@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import { apiClient } from '../../lib/api-client'
+import { useFlashMessage } from '../../hooks/useFlashMessage'
 
 interface DeleteButtonProps {
   id: string
   apiEndpoint: string
   confirmMessage: string
   onDeleted?: () => void
+  successMessage?: string
 }
 
-export function DeleteButton({ id, apiEndpoint, confirmMessage, onDeleted }: DeleteButtonProps) {
+export function DeleteButton({ id, apiEndpoint, confirmMessage, onDeleted, successMessage }: DeleteButtonProps) {
+  const { showSuccess, showError } = useFlashMessage()
   const [isDeleting, setIsDeleting] = useState(false)
 
   const handleDelete = async () => {
@@ -21,14 +24,17 @@ export function DeleteButton({ id, apiEndpoint, confirmMessage, onDeleted }: Del
     try {
       // Use DELETE method with id in path
       await apiClient.delete(`${apiEndpoint}/${id}`)
+      showSuccess(successMessage || 'Data berhasil dihapus!')
       if (onDeleted) {
         onDeleted()
       } else {
-        window.location.reload()
+        setTimeout(() => {
+          window.location.reload()
+        }, 1000)
       }
     } catch (error: any) {
       console.error('Delete error:', error)
-      alert(error.message || 'Gagal menghapus data')
+      showError(error.message || 'Gagal menghapus data')
       setIsDeleting(false)
     }
   }
