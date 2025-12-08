@@ -1,0 +1,68 @@
+🚀 FINAL UPLOAD - 2 STEPS:
+
+═══════════════════════════════════════════════
+STEP 1: UPLOAD FRONTEND BARU (Fix CORS!)
+═══════════════════════════════════════════════
+
+📁 Folder: cpanel-fix/frontend-dist/
+
+Upload ISI dari frontend-dist/ ke:
+→ /public_html/ (root website)
+
+Via FileZilla:
+1. Masuk ke folder: cpanel-fix/frontend-dist/
+2. Select All (Ctrl+A)
+3. Upload ke: /public_html/
+4. Overwrite semua files
+
+Files yang akan diupload:
+- index.html
+- assets/index-xxx.css
+- assets/index-xxx.js
+- assets/worker-xxx.js
+
+═══════════════════════════════════════════════
+STEP 2: RUN DATABASE MIGRATION
+═══════════════════════════════════════════════
+
+File: cpanel-fix/RUN-MIGRATION-PAGEHERO.sql
+
+Via phpMyAdmin:
+1. Login phpMyAdmin
+2. Select database: u548738830_alazhar
+3. SQL tab
+4. Copy-paste isi file RUN-MIGRATION-PAGEHERO.sql
+5. Execute (Go)
+
+SQL yang akan dijalankan:
+- ALTER TABLE PageHero ADD COLUMN videoFile
+- ALTER TABLE PageHero ADD COLUMN videoDuration
+- CREATE INDEX
+
+═══════════════════════════════════════════════
+✅ SETELAH UPLOAD & MIGRATION:
+═══════════════════════════════════════════════
+
+1. Clear browser cache: Ctrl+Shift+Delete
+2. Hard reload: Ctrl+Shift+R
+3. Test: https://aicjatibening.com
+4. Console (F12): NO CORS ERRORS! ✅
+5. Test upload video di:
+   - /admin/sliders → ✅
+   - /admin/pages/xxx/hero → ✅
+
+═══════════════════════════════════════════════
+🎯 YANG SUDAH DIPERBAIKI:
+═══════════════════════════════════════════════
+
+✅ CORS credentials conflict → FIXED!
+✅ Frontend remove credentials: 'include'
+✅ PageHero sudah support upload video
+✅ Auto-compress video > 5MB
+✅ Auto-trim video (optional)
+✅ PHP upload limit 50M
+
+═══════════════════════════════════════════════
+DONE! Upload 2 steps di atas!
+═══════════════════════════════════════════════
+

@@ -145,6 +145,78 @@ class Utils
     }
 
     /**
+     * Trim video to specified duration
+     * @param string $inputPath - Path to input video file
+     * @param string $outputPath - Path to output video file
+     * @param int $durationSeconds - Duration in seconds (default: 5)
+     * @return bool - True if successful, false otherwise
+     */
+    public static function trimVideo($inputPath, $outputPath, $durationSeconds = 5)
+    {
+        if (!file_exists($inputPath)) {
+            throw new \Exception('Input video file not found');
+        }
+
+        $ffmpeg = self::findExecutable('ffmpeg');
+        if (!$ffmpeg) {
+            throw new \Exception('FFmpeg not found. Please install FFmpeg to enable video trimming.');
+        }
+
+        try {
+            // Build FFmpeg command
+            // -i input: input file
+            // -ss 0: start from beginning
+            // -t duration: trim to specified seconds
+            // -c:v libx264: encode with H.264
+            // -preset ultrafast: fast encoding
+            // -crf 23: quality (lower is better, 23 is default)
+            // -c:a aac: encode audio with AAC
+            // -b:a 128k: audio bitrate
+            // -movflags +faststart: optimize for web streaming
+            // -y: overwrite output file without asking
+            $command = sprintf(
+                '%s -i %s -ss 0 -t %d -c:v libx264 -preset ultrafast -crf 23 -c:a aac -b:a 128k -movflags +faststart -y %s 2>&1',
+                escapeshellarg($ffmpeg),
+                escapeshellarg($inputPath),
+                (int) $durationSeconds,
+                escapeshellarg($outputPath)
+            );
+
+            // Execute command
+            $output = shell_exec($command);
+            
+            // Check if output file was created
+            if (!file_exists($outputPath) || filesize($outputPath) === 0) {
+                throw new \Exception('Failed to create trimmed video. FFmpeg output: ' . $output);
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            // Clean up output file if it exists
+            if (file_exists($outputPath)) {
+                @unlink($outputPath);
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Check if video is longer than specified duration
+     * @param string $videoPath - Path to video file
+     * @param int $durationSeconds - Duration in seconds to check against
+     * @return bool - True if video is longer than duration
+     */
+    public static function shouldTrimVideo($videoPath, $durationSeconds = 5)
+    {
+        $duration = self::getVideoDuration($videoPath);
+        if ($duration === null) {
+            // If we can't get duration, don't trim
+            return false;
+        }
+        return $duration > $durationSeconds;
+    }
+
+    /**
      * Find executable in system PATH
      */
     private static function findExecutable($name)

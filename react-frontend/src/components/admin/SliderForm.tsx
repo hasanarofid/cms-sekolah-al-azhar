@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Upload, X, Loader2 } from 'lucide-react'
+import { Upload, X, Loader2, Scissors } from 'lucide-react'
 import { apiClient } from '../../lib/api-client'
 import { getImageUrl } from '../../lib/utils-image-url'
 import { useFlashMessage } from '../../hooks/useFlashMessage'
+import { trimVideo, shouldTrimVideo, formatFileSize, autoCompressIfNeeded } from '../../lib/video-trimmer'
 
 const youtubeUrlRegex = /(youtube\.com\/(watch\?v=|embed\/|shorts\/)|youtu\.be\/)/i
 
@@ -68,6 +69,11 @@ export function SliderForm({ slider }: SliderFormProps) {
   const [videoDuration, setVideoDuration] = useState<number | null>(
     slider?.videoDuration ?? null
   )
+  const [autoTrimVideo, setAutoTrimVideo] = useState(false) // Disable auto-trim by default (lebih stabil)
+  const [trimProgress, setTrimProgress] = useState<number>(0)
+  const [isTrimming, setIsTrimming] = useState(false)
+  const [isCompressing, setIsCompressing] = useState(false)
+  const [compressProgress, setCompressProgress] = useState<number>(0)
 
   const {
     register,
@@ -158,15 +164,115 @@ export function SliderForm({ slider }: SliderFormProps) {
 
     setUploadingVideo(true)
     setError('')
+    
+    let processedFile = file
+    let useClientSideTrim = autoTrimVideo
+    let useServerSideTrim = false
 
     try {
-      const data = await apiClient.upload('/admin/upload', file, 'sliders', true, true) // isVideo = true
+      // Step 1: Auto-compress if file > 5MB (to fit PHP upload limit)
+      const fileSizeMB = file.size / (1024 * 1024)
+      if (fileSizeMB > 5) {
+        try {
+          setIsCompressing(true)
+          setCompressProgress(0)
+          
+          console.log(`📦 Video ${formatFileSize(file.size)} > 5MB, compressing...`)
+          
+          processedFile = await autoCompressIfNeeded(file, 5, (progress) => {
+            setCompressProgress(progress)
+          })
+          
+          console.log(`✅ Compressed: ${formatFileSize(file.size)} → ${formatFileSize(processedFile.size)}`)
+          
+          setIsCompressing(false)
+          setCompressProgress(0)
+        } catch (compressError: any) {
+          console.warn('⚠️ Compression failed:', compressError.message)
+          setIsCompressing(false)
+          
+          // If compress fails and file too big, show error
+          if (fileSizeMB > 50) {
+            throw new Error('Video terlalu besar. Maksimal 50MB. Silakan compress video terlebih dahulu.')
+          }
+          // Otherwise, try to upload original
+          processedFile = file
+        }
+      }
+      
+      // Step 2: Trim video if enabled
+      // Check if video needs trimming (client-side)
+      if (autoTrimVideo) {
+        const needsTrim = await shouldTrimVideo(file, 5)
+        
+        if (needsTrim) {
+          try {
+            setIsTrimming(true)
+            setTrimProgress(0)
+            
+            // Show info message
+            const originalSize = formatFileSize(file.size)
+            console.log(`🎬 Video lebih dari 5 detik. Memotong video di browser... (Ukuran asli: ${originalSize})`)
+            
+            // Trim video to 5 seconds (client-side)
+            const trimmedBlob = await trimVideo(file, 5, (progress) => {
+              setTrimProgress(progress)
+            })
+            
+            // Create new File from Blob
+            processedFile = new File(
+              [trimmedBlob],
+              file.name.replace(/\.[^/.]+$/, '') + '-trimmed.mp4',
+              { type: 'video/mp4' }
+            )
+            
+            const newSize = formatFileSize(processedFile.size)
+            console.log(`✅ Video berhasil dipotong menjadi 5 detik (Ukuran baru: ${newSize})`)
+            
+            setIsTrimming(false)
+            setTrimProgress(0)
+            useServerSideTrim = false // Already trimmed in browser
+          } catch (trimError: any) {
+            console.warn('⚠️ Client-side trimming gagal:', trimError.message)
+            console.log('🔄 Fallback: Upload ke server untuk di-trim...')
+            
+            // Fallback to server-side trimming
+            setIsTrimming(false)
+            processedFile = file // Use original file
+            useServerSideTrim = true // Let server trim it
+          }
+        }
+      }
+
+      // Upload the file (processed or original)
+      // If client-side trim failed, ask server to trim
+      const data = await apiClient.upload(
+        '/admin/upload', 
+        processedFile, 
+        'sliders', 
+        true, // includeAuth
+        true, // isVideo
+        false, // isDocument
+        useServerSideTrim, // trimVideo (server-side)
+        5 // trimDuration
+      )
+      
       const videoUrl = data.url || data.path || ''
       if (!videoUrl) {
         throw new Error('Upload gagal: URL tidak ditemukan dalam response')
       }
+      
       setValue('videoFile', videoUrl, { shouldValidate: true })
       setPreviewVideo(getImageUrl(videoUrl))
+      
+      // Show success message
+      if (useServerSideTrim) {
+        console.log('✅ Video berhasil diupload dan dipotong di server')
+      } else if (useClientSideTrim && processedFile !== file) {
+        console.log('✅ Video berhasil diupload (sudah dipotong di browser)')
+      } else {
+        console.log('✅ Video berhasil diupload')
+      }
       
       // Save video duration if provided by backend
       if (data.videoDuration && data.videoDuration > 0) {
@@ -186,10 +292,12 @@ export function SliderForm({ slider }: SliderFormProps) {
       
       setError('') // Clear any previous errors
     } catch (err: any) {
-      console.error('Upload error:', err)
+      console.error('❌ Upload error:', err)
       setError(err.message || 'Gagal mengupload video')
+      setIsTrimming(false)
     } finally {
       setUploadingVideo(false)
+      setTrimProgress(0)
     }
   }
 
@@ -357,6 +465,27 @@ export function SliderForm({ slider }: SliderFormProps) {
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Video File untuk Autoplay Background (opsional)
         </label>
+        
+        {/* Auto-trim toggle */}
+        <div className="mb-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="auto-trim"
+              checked={autoTrimVideo}
+              onChange={(e) => setAutoTrimVideo(e.target.checked)}
+              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+            />
+            <label htmlFor="auto-trim" className="flex items-center text-sm text-gray-700 cursor-pointer">
+              <Scissors className="w-4 h-4 mr-1 text-blue-600" />
+              <span className="font-medium">Auto-trim video menjadi 5 detik (Eksperimental)</span>
+            </label>
+          </div>
+          <p className="text-xs text-gray-600 mt-1 ml-6">
+            ⚠️ Fitur ini butuh koneksi internet stabil. Jika gagal, upload video pendek (≤5 detik) atau disable fitur ini.
+          </p>
+        </div>
+        
         {previewVideo ? (
           <div className="relative mb-4">
             <video
@@ -383,7 +512,7 @@ export function SliderForm({ slider }: SliderFormProps) {
               type="file"
               accept="video/mp4,video/webm,video/ogg,video/quicktime"
               onChange={handleVideoUpload}
-              disabled={uploadingVideo}
+              disabled={uploadingVideo || isTrimming || isCompressing}
               className="hidden"
               id="video-upload"
             />
@@ -391,19 +520,64 @@ export function SliderForm({ slider }: SliderFormProps) {
               htmlFor="video-upload"
               className="cursor-pointer flex flex-col items-center"
             >
-              {uploadingVideo ? (
-                <Loader2 className="w-8 h-8 text-primary-600 animate-spin mb-2" />
+              {isCompressing ? (
+                <>
+                  <Loader2 className="w-8 h-8 text-orange-600 animate-spin mb-2" />
+                  <span className="text-sm text-gray-600 mb-2">
+                    Mengompress video...
+                  </span>
+                  <div className="w-full max-w-xs bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-orange-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${compressProgress}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-gray-500 mt-1">{compressProgress}%</span>
+                </>
+              ) : isTrimming ? (
+                <>
+                  <Scissors className="w-8 h-8 text-blue-600 animate-pulse mb-2" />
+                  <span className="text-sm text-gray-600 mb-2">
+                    Memotong video menjadi 5 detik...
+                  </span>
+                  <div className="w-full max-w-xs bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${trimProgress}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-gray-500 mt-1">{trimProgress}%</span>
+                </>
+              ) : uploadingVideo ? (
+                <>
+                  <Loader2 className="w-8 h-8 text-primary-600 animate-spin mb-2" />
+                  <span className="text-sm text-gray-600">Mengupload video...</span>
+                </>
               ) : (
-                <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                <>
+                  <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                  <span className="text-sm text-gray-600">
+                    Klik untuk upload video (mp4, webm, max 50MB)
+                  </span>
+                </>
               )}
-              <span className="text-sm text-gray-600">
-                {uploadingVideo ? 'Mengupload video...' : 'Klik untuk upload video (mp4, webm, max 50MB)'}
-              </span>
             </label>
           </div>
         )}
         <p className="mt-1 text-xs text-gray-500">
           Video ini akan ditampilkan sebagai background autoplay di slider. Jika tidak diisi, akan menggunakan gambar.
+          <span className="block mt-1 text-orange-600 font-medium">
+            🔄 Auto-compress: Video {'>'}5MB akan otomatis di-compress sebelum upload.
+          </span>
+          {autoTrimVideo ? (
+            <span className="block mt-1 text-blue-600 font-medium">
+              ✓ Video yang lebih dari 5 detik akan otomatis dipotong menjadi 5 detik pertama.
+            </span>
+          ) : (
+            <span className="block mt-1 text-green-600 font-medium">
+              💡 Tip: Upload video yang sudah pendek (≤5 detik) untuk performa terbaik.
+            </span>
+          )}
         </p>
       </div>
 

@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit2, ChevronDown, ChevronUp, X, Upload, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Edit2, ChevronDown, ChevronUp, X, Upload, Loader2, Scissors } from 'lucide-react'
 import { apiClient } from '../../lib/api-client'
 import { getImageUrl } from '../../lib/utils-image-url'
 import { Select2 } from './Select2'
+import { trimVideo, shouldTrimVideo, formatFileSize } from '../../lib/video-trimmer'
 
 interface PageBlock {
   id: string
@@ -529,6 +530,9 @@ function BlockEditor({ pageId, block, onClose, onSave }: {
   const [isSaving, setIsSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [saveError, setSaveError] = useState('')
+  const [autoTrimVideo, setAutoTrimVideo] = useState(false) // Disable auto-trim by default (lebih stabil)
+  const [trimProgress, setTrimProgress] = useState<number>(0)
+  const [isTrimming, setIsTrimming] = useState(false)
 
   const handleSave = async (e?: React.MouseEvent) => {
     if (e) {
@@ -656,11 +660,78 @@ function BlockEditor({ pageId, block, onClose, onSave }: {
     }
 
     setUploading(true)
+    let processedFile = file
+    let useClientSideTrim = autoTrimVideo
+    let useServerSideTrim = false
+
     try {
-      const data = await apiClient.upload('/admin/upload', file, 'sliders', true, true) // isVideo = true
+      // Check if video needs trimming (client-side)
+      if (autoTrimVideo) {
+        const needsTrim = await shouldTrimVideo(file, 5)
+        
+        if (needsTrim) {
+          try {
+            setIsTrimming(true)
+            setTrimProgress(0)
+            
+            // Show info message
+            const originalSize = formatFileSize(file.size)
+            console.log(`🎬 Video lebih dari 5 detik. Memotong video di browser... (Ukuran asli: ${originalSize})`)
+            
+            // Trim video to 5 seconds (client-side)
+            const trimmedBlob = await trimVideo(file, 5, (progress) => {
+              setTrimProgress(progress)
+            })
+            
+            // Create new File from Blob
+            processedFile = new File(
+              [trimmedBlob],
+              file.name.replace(/\.[^/.]+$/, '') + '-trimmed.mp4',
+              { type: 'video/mp4' }
+            )
+            
+            const newSize = formatFileSize(processedFile.size)
+            console.log(`✅ Video berhasil dipotong menjadi 5 detik (Ukuran baru: ${newSize})`)
+            
+            setIsTrimming(false)
+            setTrimProgress(0)
+            useServerSideTrim = false // Already trimmed in browser
+          } catch (trimError: any) {
+            console.warn('⚠️ Client-side trimming gagal:', trimError.message)
+            console.log('🔄 Fallback: Upload ke server untuk di-trim...')
+            
+            // Fallback to server-side trimming
+            setIsTrimming(false)
+            processedFile = file // Use original file
+            useServerSideTrim = true // Let server trim it
+          }
+        }
+      }
+
+      // Upload the file (processed or original)
+      const data = await apiClient.upload(
+        '/admin/upload', 
+        processedFile, 
+        'sliders', 
+        true, // includeAuth
+        true, // isVideo
+        false, // isDocument
+        useServerSideTrim, // trimVideo (server-side)
+        5 // trimDuration
+      )
+      
       const videoUrl = data.url || data.path || ''
       if (!videoUrl) {
         throw new Error('Upload gagal: URL tidak ditemukan dalam response')
+      }
+      
+      // Show success message
+      if (useServerSideTrim) {
+        console.log('✅ Video berhasil diupload dan dipotong di server')
+      } else if (useClientSideTrim && processedFile !== file) {
+        console.log('✅ Video berhasil diupload (sudah dipotong di browser)')
+      } else {
+        console.log('✅ Video berhasil diupload')
       }
       
       if (block.type === 'hero-slider' && sliderIndex !== undefined) {
@@ -674,10 +745,12 @@ function BlockEditor({ pageId, block, onClose, onSave }: {
         }
       }
     } catch (error: any) {
-      console.error('Error uploading video:', error)
+      console.error('❌ Error uploading video:', error)
       alert(error.message || 'Gagal mengupload video')
+      setIsTrimming(false)
     } finally {
       setUploading(false)
+      setTrimProgress(0)
     }
   }
 
@@ -1006,6 +1079,27 @@ function BlockEditor({ pageId, block, onClose, onSave }: {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Video File untuk Autoplay Background (opsional)
                         </label>
+                        
+                        {/* Auto-trim toggle */}
+                        <div className="mb-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`auto-trim-${index}`}
+                              checked={autoTrimVideo}
+                              onChange={(e) => setAutoTrimVideo(e.target.checked)}
+                              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                            />
+                            <label htmlFor={`auto-trim-${index}`} className="flex items-center text-sm text-gray-700 cursor-pointer">
+                              <Scissors className="w-4 h-4 mr-1 text-blue-600" />
+                              <span className="font-medium">Auto-trim video menjadi 5 detik (Eksperimental)</span>
+                            </label>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-1 ml-6">
+                            ⚠️ Fitur ini butuh koneksi internet stabil. Jika gagal, upload video pendek (≤5 detik) atau disable fitur ini.
+                          </p>
+                        </div>
+                        
                         {slider.videoFile ? (
                           <div className="relative mb-4">
                             <video
@@ -1031,7 +1125,7 @@ function BlockEditor({ pageId, block, onClose, onSave }: {
                               type="file"
                               accept="video/*"
                               onChange={(e) => handleVideoUpload(e, index)}
-                              disabled={uploading}
+                              disabled={uploading || isTrimming}
                               className="hidden"
                               id={`slider-video-${index}`}
                             />
@@ -1039,15 +1133,47 @@ function BlockEditor({ pageId, block, onClose, onSave }: {
                               htmlFor={`slider-video-${index}`}
                               className="cursor-pointer flex flex-col items-center"
                             >
-                              <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                              <span className="text-sm text-gray-600">
-                                {uploading ? 'Mengupload...' : 'Klik untuk upload video (mp4, webm, max 50MB)'}
-                              </span>
+                              {isTrimming ? (
+                                <>
+                                  <Scissors className="w-8 h-8 text-blue-600 animate-pulse mb-2" />
+                                  <span className="text-sm text-gray-600 mb-2">
+                                    Memotong video menjadi 5 detik...
+                                  </span>
+                                  <div className="w-full max-w-xs bg-gray-200 rounded-full h-2">
+                                    <div 
+                                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                      style={{ width: `${trimProgress}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs text-gray-500 mt-1">{trimProgress}%</span>
+                                </>
+                              ) : uploading ? (
+                                <>
+                                  <Loader2 className="w-8 h-8 text-primary-600 animate-spin mb-2" />
+                                  <span className="text-sm text-gray-600">Mengupload video...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                                  <span className="text-sm text-gray-600">
+                                    Klik untuk upload video (mp4, webm, max 50MB)
+                                  </span>
+                                </>
+                              )}
                             </label>
                           </div>
                         )}
                         <p className="text-xs text-gray-500 mt-1">
                           Video akan autoplay sebagai background (seperti website referensi). Video akan otomatis muted dan loop.
+                          {autoTrimVideo ? (
+                            <span className="block mt-1 text-blue-600 font-medium">
+                              ✓ Video yang lebih dari 5 detik akan otomatis dipotong menjadi 5 detik pertama.
+                            </span>
+                          ) : (
+                            <span className="block mt-1 text-green-600 font-medium">
+                              💡 Tip: Upload video yang sudah pendek (≤5 detik) untuk performa terbaik.
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>

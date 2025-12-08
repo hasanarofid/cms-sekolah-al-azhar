@@ -41,7 +41,6 @@ export const apiClient = {
     const response = await fetch(buildUrl(endpoint), {
       method: 'GET',
       headers: getHeaders(includeAuth),
-      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -81,7 +80,6 @@ export const apiClient = {
     const response = await fetch(buildUrl(endpoint), {
       method: 'POST',
       headers: getHeaders(includeAuth),
-      credentials: 'include',
       body: JSON.stringify(data),
     });
 
@@ -97,7 +95,6 @@ export const apiClient = {
     const response = await fetch(buildUrl(endpoint), {
       method: 'PUT',
       headers: getHeaders(includeAuth),
-      credentials: 'include',
       body: JSON.stringify(data),
     });
 
@@ -113,7 +110,6 @@ export const apiClient = {
     const response = await fetch(buildUrl(endpoint), {
       method: 'DELETE',
       headers: getHeaders(includeAuth),
-      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -129,7 +125,16 @@ export const apiClient = {
     return { success: true };
   },
 
-  async upload(endpoint: string, file: File, type: string = 'general', includeAuth = true, isVideo: boolean = false, isDocument: boolean = false) {
+  async upload(
+    endpoint: string, 
+    file: File, 
+    type: string = 'general', 
+    includeAuth = true, 
+    isVideo: boolean = false, 
+    isDocument: boolean = false,
+    trimVideo: boolean = false,
+    trimDuration: number = 5
+  ) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type); // Add type parameter like Next.js
@@ -138,6 +143,10 @@ export const apiClient = {
     }
     if (isDocument) {
       formData.append('isDocument', 'true'); // Indicate this is a document upload
+    }
+    if (trimVideo) {
+      formData.append('trimVideo', 'true'); // Enable server-side video trimming
+      formData.append('trimDuration', trimDuration.toString()); // Trim duration in seconds
     }
 
     const headers: HeadersInit = {};
@@ -151,7 +160,6 @@ export const apiClient = {
     const response = await fetch(buildUrl(endpoint), {
       method: 'POST',
       headers,
-      credentials: 'include',
       body: formData,
     });
 

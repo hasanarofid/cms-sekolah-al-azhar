@@ -1,0 +1,20 @@
+🚀 FILES YANG HARUS DIUPLOAD ULANG KE CPANEL:
+
+1. php-backend/.htaccess
+   → Upload ke: /public_html/api/.htaccess
+   
+2. php-backend/public/.htaccess
+   → Upload ke: /public_html/api/public/.htaccess
+   
+3. php-backend/public/index.php
+   → Upload ke: /public_html/api/public/index.php
+   
+4. php-backend/src/Response.php
+   → Upload ke: /public_html/api/src/Response.php
+
+SETELAH UPLOAD:
+- Test: https://api.aicjatibening.com/
+- Test: https://api.aicjatibening.com/api/admin/menus
+- Buka https://aicjatibening.com dan check console (F12)
+- Seharusnya NO CORS ERRORS!
+

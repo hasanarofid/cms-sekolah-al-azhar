@@ -1,20 +1,22 @@
 #!/bin/bash
-# Script untuk start PHP built-in server dengan upload limits yang benar
 
-cd "$(dirname "$0")/public"
-
-echo "Starting PHP server with upload limits..."
-echo "upload_max_filesize: 50M"
-echo "post_max_size: 55M"
-echo ""
-echo "Server running at: http://localhost:8000"
-echo "Press Ctrl+C to stop"
+echo "================================================"
+echo "🚀 Starting PHP Development Server"
+echo "   with Video Upload Support (50MB)"
+echo "================================================"
 echo ""
 
-php -d upload_max_filesize=50M \
-    -d post_max_size=55M \
+# Change to php-backend directory
+cd "$(dirname "$0")"
+
+# Start PHP server with custom upload limits
+php -S localhost:8000 \
+    -t public \
+    -d upload_max_filesize=50M \
+    -d post_max_size=60M \
     -d max_execution_time=300 \
     -d max_input_time=300 \
-    -d memory_limit=128M \
-    -S localhost:8000
+    -d memory_limit=256M
 
+echo ""
+echo "Server stopped."

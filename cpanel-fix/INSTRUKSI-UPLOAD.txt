@@ -1,0 +1,39 @@
+🚀 UPLOAD 5 FILES INI KE CPANEL (Via FileZilla):
+
+1. index.php
+   → /public_html/api/public/index.php
+
+2. Response.php
+   → /public_html/api/src/Response.php
+
+3. public.htaccess
+   → /public_html/api/public/.htaccess
+   (Rename jadi .htaccess setelah upload!)
+
+4. root.htaccess
+   → /public_html/api/.htaccess
+   (Rename jadi .htaccess setelah upload!)
+
+5. config.php
+   → /public_html/api/config/config.php
+
+⚠️ PENTING: 
+- Rename public.htaccess → .htaccess
+- Rename root.htaccess → .htaccess
+- Set permissions: 644
+
+✅ SETELAH UPLOAD:
+Test: https://api.aicjatibening.com/
+Should show JSON (no 500 error!)
+
+Test: https://aicjatibening.com
+Check console - NO CORS errors!
+
+🎯 YANG SUDAH DIPERBAIKI:
+✅ CORS headers simplified (no credentials conflict)
+✅ Always allow all origins (*)
+✅ .htaccess compatible untuk cPanel
+✅ PHP upload limits 50M
+
+DONE!
+

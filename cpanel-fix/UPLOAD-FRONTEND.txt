@@ -1,0 +1,34 @@
+🚀 UPLOAD FRONTEND BARU - FIX CORS!
+
+📁 FOLDER: frontend-dist/
+
+Upload SEMUA isi folder frontend-dist/ ke:
+→ /public_html/ (root website)
+
+STRUKTUR:
+/public_html/
+├── index.html        ← Overwrite!
+├── assets/           ← Overwrite semua!
+│   ├── index-xxx.css
+│   └── index-xxx.js
+└── ...
+
+⚠️ PENTING:
+- Upload/overwrite SEMUA files
+- Jangan upload folder frontend-dist/ sendiri
+- Upload ISI DARI frontend-dist/ ke root
+
+✅ SETELAH UPLOAD:
+1. Clear browser cache: Ctrl+Shift+Delete
+2. Hard reload: Ctrl+Shift+R
+3. Buka: https://aicjatibening.com
+4. Check console (F12)
+5. NO CORS ERRORS! ✅
+
+🎯 YANG DIPERBAIKI:
+✅ Hapus credentials: 'include' dari semua fetch
+✅ Compatible dengan CORS wildcard (*)
+✅ Fix "Credential is not supported" error
+
+DONE!
+

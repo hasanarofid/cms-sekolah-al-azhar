@@ -1,0 +1,38 @@
+⚡ QUICK FIX - Upload Files Ini ke cPanel:
+
+📁 FILES (4 files):
+
+1. php-backend/public/index.php
+   → /public_html/api/public/index.php
+
+2. php-backend/src/Response.php
+   → /public_html/api/src/Response.php
+
+3. php-backend/public/.htaccess
+   → /public_html/api/public/.htaccess
+
+4. php-backend/config/config.php
+   → /public_html/api/config/config.php
+
+✅ SETELAH UPLOAD:
+
+1. Refresh browser: Ctrl+Shift+R
+2. Test: https://api.aicjatibening.com/
+3. Check console - NO CORS ERRORS!
+
+🎯 YANG DIPERBAIKI:
+
+- ✅ CORS headers simplified (wildcard *)
+- ✅ Removed credentials conflict
+- ✅ Added HTTP fallback to ALLOWED_ORIGINS
+- ✅ .htaccess simplified for shared hosting
+
+🔧 CHANGES:
+
+- index.php: CORS headers di awal
+- Response.php: Hapus credentials, pakai wildcard *
+- .htaccess: Simplified, tested for cPanel
+- config.php: Added HTTP origins
+
+DONE! Upload 4 files dan test!
+

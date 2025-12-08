@@ -53,8 +53,8 @@ class PageHeroController extends BaseController
         // Create new hero
         $this->db->query(
             'INSERT INTO PageHero (id, pageId, title, titleEn, subtitle, subtitleEn, 
-             image, videoUrl, buttonText, buttonTextEn, buttonUrl, `order`, isActive) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+             image, videoUrl, videoFile, videoDuration, buttonText, buttonTextEn, buttonUrl, `order`, isActive) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $id,
                 $pageId,
@@ -64,6 +64,8 @@ class PageHeroController extends BaseController
                 $data['subtitleEn'] ?? null,
                 $data['image'] ?? null,
                 $data['videoUrl'] ?? null,
+                $data['videoFile'] ?? null,
+                $data['videoDuration'] ?? null,
                 $data['buttonText'] ?? null,
                 $data['buttonTextEn'] ?? null,
                 $data['buttonUrl'] ?? null,
@@ -105,7 +107,7 @@ class PageHeroController extends BaseController
 
         $this->db->query(
             'UPDATE PageHero SET title = ?, titleEn = ?, subtitle = ?, subtitleEn = ?, 
-             image = ?, videoUrl = ?, buttonText = ?, buttonTextEn = ?, buttonUrl = ?, 
+             image = ?, videoUrl = ?, videoFile = ?, videoDuration = ?, buttonText = ?, buttonTextEn = ?, buttonUrl = ?, 
              `order` = ?, isActive = ? WHERE id = ?',
             [
                 $data['title'] ?? $existing['title'],
@@ -114,6 +116,8 @@ class PageHeroController extends BaseController
                 $data['subtitleEn'] ?? $existing['subtitleEn'],
                 $data['image'] ?? $existing['image'],
                 $data['videoUrl'] ?? $existing['videoUrl'],
+                $data['videoFile'] ?? $existing['videoFile'] ?? null,
+                $data['videoDuration'] ?? $existing['videoDuration'] ?? null,
                 $data['buttonText'] ?? $existing['buttonText'],
                 $data['buttonTextEn'] ?? $existing['buttonTextEn'],
                 $data['buttonUrl'] ?? $existing['buttonUrl'],

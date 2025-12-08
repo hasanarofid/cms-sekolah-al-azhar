@@ -223,6 +223,45 @@ class UploadController extends BaseController
             Response::error('File was not saved to destination', 500);
         }
 
+        // Check if video should be trimmed (server-side processing)
+        // Frontend can send trimVideo=true and trimDuration=5 (default)
+        $trimVideo = isset($_POST['trimVideo']) && ($_POST['trimVideo'] === 'true' || $_POST['trimVideo'] === true || $_POST['trimVideo'] === '1');
+        $trimDuration = isset($_POST['trimDuration']) ? (int) $_POST['trimDuration'] : 5;
+        
+        if ($isVideo && $trimVideo) {
+            try {
+                // Check if video needs trimming
+                if (Utils::shouldTrimVideo($filepath, $trimDuration)) {
+                    error_log("Video is longer than {$trimDuration} seconds. Trimming...");
+                    
+                    // Create temporary output path
+                    $tempOutputPath = $filepath . '.temp.mp4';
+                    
+                    // Trim video
+                    Utils::trimVideo($filepath, $tempOutputPath, $trimDuration);
+                    
+                    // Replace original with trimmed version
+                    if (file_exists($tempOutputPath)) {
+                        // Remove original
+                        @unlink($filepath);
+                        
+                        // Rename temp to original
+                        rename($tempOutputPath, $filepath);
+                        
+                        error_log("Video successfully trimmed to {$trimDuration} seconds");
+                    }
+                }
+            } catch (\Exception $e) {
+                // If trimming fails, continue with original video
+                error_log('Failed to trim video: ' . $e->getMessage());
+                
+                // Clean up temp file if it exists
+                if (isset($tempOutputPath) && file_exists($tempOutputPath)) {
+                    @unlink($tempOutputPath);
+                }
+            }
+        }
+
         // Get video duration if it's a video file
         $videoDuration = null;
         if ($isVideo) {

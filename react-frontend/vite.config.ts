@@ -9,4 +9,8 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
   },
+  // Optimizations for FFmpeg.wasm
+  optimizeDeps: {
+    exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util']
+  }
 })
