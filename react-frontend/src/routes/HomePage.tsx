@@ -8,6 +8,7 @@ import { SectionRenderer } from '../components/SectionRenderer'
 import { FAQSection } from '../components/FAQSection'
 import { FiguresSection } from '../components/FiguresSection'
 import { PartnershipsSection } from '../components/PartnershipsSection'
+import { ScrollAnimationWrapper } from '../components/ScrollAnimationWrapper'
 import { apiClient } from '../lib/api-client'
 import { useSettings } from '../lib/use-settings'
 import { useSEO } from '../lib/use-seo'
@@ -211,35 +212,38 @@ export default function HomePage() {
             
             // Render grouped video profiles
             renderedSections.push(
-              <section key={`video-group-${videoProfiles[0].id}`} className="py-8 md:py-10 lg:py-12 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                    {videoProfiles.map((videoSection: any) => (
-                      <SectionRenderer
-                        key={videoSection.id}
-                        section={videoSection}
-                        locale={locale}
-                        activeVideo={activeVideo}
-                        onPlayVideo={handlePlayVideo}
-                        onCloseVideo={() => setActiveVideo(null)}
-                        isGrouped={true}
-                      />
-                    ))}
+              <ScrollAnimationWrapper key={`video-group-${videoProfiles[0].id}`} delay={0}>
+                <section className="py-8 md:py-10 lg:py-12 bg-white">
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                      {videoProfiles.map((videoSection: any) => (
+                        <SectionRenderer
+                          key={videoSection.id}
+                          section={videoSection}
+                          locale={locale}
+                          activeVideo={activeVideo}
+                          onPlayVideo={handlePlayVideo}
+                          onCloseVideo={() => setActiveVideo(null)}
+                          isGrouped={true}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </section>
+                </section>
+              </ScrollAnimationWrapper>
             )
           } else {
             // Render other sections individually
             renderedSections.push(
-              <SectionRenderer
-                key={section.id}
-                section={section}
-                locale={locale}
-                activeVideo={activeVideo}
-                onPlayVideo={handlePlayVideo}
-                onCloseVideo={() => setActiveVideo(null)}
-              />
+              <ScrollAnimationWrapper key={section.id} delay={0}>
+                <SectionRenderer
+                  section={section}
+                  locale={locale}
+                  activeVideo={activeVideo}
+                  onPlayVideo={handlePlayVideo}
+                  onCloseVideo={() => setActiveVideo(null)}
+                />
+              </ScrollAnimationWrapper>
             )
             i++
           }
@@ -252,7 +256,11 @@ export default function HomePage() {
       {(() => {
         const hasFAQSection = homeSections.some((s: any) => s.type === 'faq' && s.isActive)
         if (!hasFAQSection && faqs.length > 0) {
-          return <FAQSection faqs={faqs} locale={locale} />
+          return (
+            <ScrollAnimationWrapper delay={0}>
+              <FAQSection faqs={faqs} locale={locale} />
+            </ScrollAnimationWrapper>
+          )
         }
         return null
       })()}
@@ -260,16 +268,20 @@ export default function HomePage() {
      
 
       {/* Figures Section */}
-      <FiguresSection 
-        figures={figures} 
-        locale={locale}
-        sectionTitle={settings.figures_section_title?.value || 'Tokoh-Tokoh SMA AL AZHAR INSAN CENDEKIA JATIBENING'}
-        sectionTitleEn={settings.figures_section_title_en?.value || undefined}
-        backgroundImage={settings.figures_section_background?.value || undefined}
-      />
+      <ScrollAnimationWrapper delay={0}>
+        <FiguresSection 
+          figures={figures} 
+          locale={locale}
+          sectionTitle={settings.figures_section_title?.value || 'Tokoh-Tokoh SMA AL AZHAR INSAN CENDEKIA JATIBENING'}
+          sectionTitleEn={settings.figures_section_title_en?.value || undefined}
+          backgroundImage={settings.figures_section_background?.value || undefined}
+        />
+      </ScrollAnimationWrapper>
 
       {/* Partnerships Section */}
-      <PartnershipsSection partnerships={partnerships} locale={locale} />
+      <ScrollAnimationWrapper delay={0}>
+        <PartnershipsSection partnerships={partnerships} locale={locale} />
+      </ScrollAnimationWrapper>
 
       <Footer 
         locale={locale}

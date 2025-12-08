@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { Calendar } from 'lucide-react'
 import { apiClient } from '../lib/api-client'
 import { getImageUrl } from '../lib/utils-image-url'
+import { ScrollItem } from './ScrollItem'
 
 interface HomeNewsSectionProps {
   section: {
@@ -81,7 +82,7 @@ export function HomeNewsSection({ section, locale = 'id' }: HomeNewsSectionProps
 
         {/* News Grid - 3 columns like reference */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {posts.map((post) => {
+          {posts.map((post, index) => {
             const displayPostTitle = locale === 'en' && post.titleEn ? post.titleEn : post.title
             const displayExcerpt = locale === 'en' && post.excerptEn ? post.excerptEn : post.excerpt
 
@@ -97,11 +98,11 @@ export function HomeNewsSection({ section, locale = 'id' }: HomeNewsSectionProps
             }
 
             return (
-              <Link
-                key={post.id}
-                to={`/berita/${post.slug}`}
-                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 group"
-              >
+              <ScrollItem key={post.id} delay={index * 0.1} direction="up">
+                <Link
+                  to={`/berita/${post.slug}`}
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 group block"
+                >
                 {/* Image */}
                 {post.featuredImage && (
                   <div className="relative h-56 overflow-hidden">
@@ -144,6 +145,7 @@ export function HomeNewsSection({ section, locale = 'id' }: HomeNewsSectionProps
                   </span>
                 </div>
               </Link>
+              </ScrollItem>
             )
           })}
         </div>

@@ -128,6 +128,26 @@
   opacity: 0;
 }
 
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Optimize scroll performance */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent layout shift during scroll animation */
+[style*="opacity: 0"] {
+  visibility: hidden;
+}
+
+[style*="opacity: 1"] {
+  visibility: visible;
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;

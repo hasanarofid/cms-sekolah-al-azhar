@@ -1,6 +1,7 @@
 'use client'
 
 import { getImageUrl } from '../lib/utils-image-url'
+import { ScrollItem } from './ScrollItem'
 
 interface Figure {
   id: string
@@ -49,27 +50,29 @@ export function FiguresSection({ figures, locale = 'id', sectionTitle, sectionTi
 
         {/* Figures Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {figures.map((figure) => (
-            <div key={figure.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-              {/* Figure Image */}
-              <div className="relative h-80 bg-gray-200">
-                <img
-                  src={getImageUrl(figure.image)}
-                  alt={locale === 'en' && figure.nameEn ? figure.nameEn : figure.name}
-                  className="w-full h-full object-cover"
-                />
+          {figures.map((figure, index) => (
+            <ScrollItem key={figure.id} delay={index * 0.1} direction="up">
+              <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                {/* Figure Image */}
+                <div className="relative h-80 bg-gray-200">
+                  <img
+                    src={getImageUrl(figure.image)}
+                    alt={locale === 'en' && figure.nameEn ? figure.nameEn : figure.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                
+                {/* Figure Info */}
+                <div className="p-6 bg-white">
+                  <h3 className="text-xl font-bold mb-2 text-gray-900">
+                    {locale === 'en' && figure.nameEn ? figure.nameEn : figure.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 font-medium">
+                    {locale === 'en' && figure.positionEn ? figure.positionEn : figure.position}
+                  </p>
+                </div>
               </div>
-              
-              {/* Figure Info */}
-              <div className="p-6 bg-white">
-                <h3 className="text-xl font-bold mb-2 text-gray-900">
-                  {locale === 'en' && figure.nameEn ? figure.nameEn : figure.name}
-                </h3>
-                <p className="text-sm text-gray-600 font-medium">
-                  {locale === 'en' && figure.positionEn ? figure.positionEn : figure.position}
-                </p>
-              </div>
-            </div>
+            </ScrollItem>
           ))}
         </div>
       </div>
