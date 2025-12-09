@@ -12,3 +12,4 @@ CREATE INDEX IF NOT EXISTS idx_pagehero_videofile ON PageHero(videoFile);
 -- Verify columns
 SHOW COLUMNS FROM PageHero;
 
+
