@@ -43,9 +43,10 @@ export function AccreditationSection({ section, locale = 'id' }: AccreditationSe
               </h2>
             )}
             {displayContent && (
-              <p className="text-gray-600 text-base md:text-lg leading-relaxed whitespace-pre-line">
-                {displayContent}
-              </p>
+              <div 
+                className="text-gray-600 text-base md:text-lg leading-relaxed prose prose-lg"
+                dangerouslySetInnerHTML={{ __html: displayContent }}
+              />
             )}
             {section.accreditationNumber && (
               <p className="text-sm text-gray-500 mt-2">

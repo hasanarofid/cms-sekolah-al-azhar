@@ -42,11 +42,14 @@ export function SplitScreenSection({ sections, locale = 'id' }: SplitScreenSecti
                   </h2>
                 )}
                 {(section.content || section.subtitle) && (
-                  <p className="text-gray-900 text-base md:text-lg leading-relaxed font-sans">
-                    {locale === 'en' && section.contentEn 
-                      ? section.contentEn 
-                      : section.content || section.subtitle}
-                  </p>
+                  <div 
+                    className="text-gray-900 text-base md:text-lg leading-relaxed font-sans prose prose-lg"
+                    dangerouslySetInnerHTML={{ 
+                      __html: locale === 'en' && section.contentEn 
+                        ? section.contentEn 
+                        : section.content || section.subtitle || ''
+                    }}
+                  />
                 )}
                 {section.buttonText && section.buttonUrl && (
                   <div className="pt-4">

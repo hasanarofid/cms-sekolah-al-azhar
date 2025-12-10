@@ -242,18 +242,27 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       ])
 
       setSuccess('Pengaturan berhasil disimpan!')
-      // Update favicon di document head
+      // Update favicon di document head dengan cache-busting
       if (data.websiteFavicon) {
         const faviconUrl = getImageUrl(data.websiteFavicon)
-        const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement
-        if (link) {
-          link.href = faviconUrl
-        } else {
+        
+        // Remove ALL existing favicon links (icon, shortcut icon, apple-touch-icon)
+        const existingLinks = document.querySelectorAll("link[rel*='icon']")
+        existingLinks.forEach(link => link.remove())
+        
+        // Add timestamp to force browser to reload favicon (cache-busting)
+        const separator = faviconUrl.includes('?') ? '&' : '?'
+        const timestampedUrl = `${faviconUrl}${separator}v=${Date.now()}`
+        
+        // Add new favicon links with multiple rel types for better compatibility
+        const iconTypes = ['icon', 'shortcut icon', 'apple-touch-icon']
+        iconTypes.forEach(relType => {
           const newLink = document.createElement('link')
-          newLink.rel = 'icon'
-          newLink.href = faviconUrl
+          newLink.rel = relType
+          newLink.type = 'image/x-icon'
+          newLink.href = timestampedUrl
           document.head.appendChild(newLink)
-        }
+        })
       }
       // Update title
       if (data.websiteTitle) {

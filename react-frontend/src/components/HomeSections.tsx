@@ -124,9 +124,12 @@ export function HomeSections({ sections, locale = 'id' }: HomeSectionsProps) {
                     )}
                     {section.content && (
                       <div className="p-4 md:p-6">
-                        <p className="text-gray-600 text-sm leading-relaxed">
-                          {locale === 'en' && section.contentEn ? section.contentEn : section.content}
-                        </p>
+                        <div 
+                          className="text-gray-600 text-sm leading-relaxed prose prose-sm"
+                          dangerouslySetInnerHTML={{ 
+                            __html: locale === 'en' && section.contentEn ? section.contentEn : section.content 
+                          }}
+                        />
                       </div>
                     )}
                   </div>
@@ -209,11 +212,14 @@ export function HomeSections({ sections, locale = 'id' }: HomeSectionsProps) {
                     {locale === 'en' && section.titleEn ? section.titleEn : section.title}
                   </h2>
                   {(section.content || section.subtitle) && (
-                    <p className="text-gray-700 text-base md:text-lg lg:text-xl leading-[1.7] font-sans max-w-2xl">
-                      {locale === 'en' && section.contentEn 
-                        ? section.contentEn 
-                        : section.content || section.subtitle}
-                    </p>
+                    <div 
+                      className="text-gray-700 text-base md:text-lg lg:text-xl leading-[1.7] font-sans max-w-2xl prose prose-lg"
+                      dangerouslySetInnerHTML={{ 
+                        __html: locale === 'en' && section.contentEn 
+                          ? section.contentEn 
+                          : section.content || section.subtitle || ''
+                      }}
+                    />
                   )}
                   {section.buttonText && section.buttonUrl && (
                     <div className="pt-2">

@@ -14,6 +14,7 @@ import { PartnershipsItemsManager } from './PartnershipsItemsManager'
 import { Select2 } from './Select2'
 import { useFlashMessage } from '../../hooks/useFlashMessage'
 import { FlashMessage } from './FlashMessage'
+import { RichTextEditor } from './RichTextEditor'
 
 const sectionSchema = z.object({
   type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'faq', 'figures', 'partnerships', 'news-section', 'maps']),
@@ -215,6 +216,8 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
 
   const sectionType = watch('type') as string
   const watchedImages = watch('images')
+  const content = watch('content')
+  const contentEn = watch('contentEn')
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -545,10 +548,12 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Content / Deskripsi (ID) {sectionType === 'masjid-al-fatih' && '*'}
             </label>
-            <textarea
-              {...register('content')}
-              rows={sectionType === 'masjid-al-fatih' ? 8 : 4}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            <RichTextEditor
+              value={content || ''}
+              onChange={(value) => {
+                setValue('content', value, { shouldValidate: true })
+              }}
+              placeholder="Masukkan konten deskripsi..."
             />
           </div>
 
@@ -556,10 +561,12 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Content / Deskripsi (EN)
             </label>
-            <textarea
-              {...register('contentEn')}
-              rows={sectionType === 'masjid-al-fatih' ? 8 : 4}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            <RichTextEditor
+              value={contentEn || ''}
+              onChange={(value) => {
+                setValue('contentEn', value, { shouldValidate: true })
+              }}
+              placeholder="Enter content description..."
             />
           </div>
         </>

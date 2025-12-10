@@ -69,9 +69,12 @@ export function NewsSection({ section, locale = 'id' }: NewsSectionProps) {
               </h2>
             )}
             {section.content && (
-              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-                {locale === 'en' && section.contentEn ? section.contentEn : section.content}
-              </p>
+              <div 
+                className="text-lg text-gray-600 max-w-3xl mx-auto prose prose-lg"
+                dangerouslySetInnerHTML={{ 
+                  __html: locale === 'en' && section.contentEn ? section.contentEn : section.content 
+                }}
+              />
             )}
           </div>
         )}

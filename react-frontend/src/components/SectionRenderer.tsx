@@ -251,11 +251,14 @@ export function SectionRenderer({
                 {locale === 'en' && section.titleEn ? section.titleEn : section.title}
               </h2>
               {(section.content || section.subtitle) && (
-                <p className="text-gray-700 text-base md:text-lg lg:text-xl leading-[1.7] font-sans max-w-2xl">
-                  {locale === 'en' && section.contentEn 
-                    ? section.contentEn 
-                    : section.content || section.subtitle}
-                </p>
+                <div 
+                  className="text-gray-700 text-base md:text-lg lg:text-xl leading-[1.7] font-sans max-w-2xl prose prose-lg"
+                  dangerouslySetInnerHTML={{ 
+                    __html: locale === 'en' && section.contentEn 
+                      ? section.contentEn 
+                      : section.content || section.subtitle || ''
+                  }}
+                />
               )}
               {section.buttonText && section.buttonUrl && (
                 <div className="pt-2">
@@ -327,10 +330,15 @@ export function SectionRenderer({
             <h3 className="text-xl font-bold mb-3 text-gray-900">
               {locale === 'en' && section.titleEn ? section.titleEn : section.title}
             </h3>
-            {section.subtitle && (
-              <p className="text-gray-600 mb-4">
-                {locale === 'en' && section.subtitleEn ? section.subtitleEn : section.subtitle}
-              </p>
+            {(section.content || section.subtitle) && (
+              <div 
+                className="text-gray-600 mb-4 prose prose-base"
+                dangerouslySetInnerHTML={{ 
+                  __html: locale === 'en' && section.contentEn 
+                    ? section.contentEn 
+                    : section.content || section.subtitle || ''
+                }}
+              />
             )}
             {section.buttonText && section.buttonUrl && (
               <Link

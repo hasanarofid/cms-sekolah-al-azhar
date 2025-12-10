@@ -17,15 +17,24 @@ export function useSettings(settings: Record<string, Setting | undefined>) {
     // Update favicon
     if (settings.website_favicon?.value) {
       const faviconUrl = getImageUrl(settings.website_favicon.value)
-      // Remove existing favicon links
-      const existingLinks = document.querySelectorAll("link[rel~='icon']")
+      
+      // Remove ALL existing favicon links (icon, shortcut icon, apple-touch-icon)
+      const existingLinks = document.querySelectorAll("link[rel*='icon']")
       existingLinks.forEach(link => link.remove())
       
-      // Add new favicon
-      const newLink = document.createElement('link')
-      newLink.rel = 'icon'
-      newLink.href = faviconUrl
-      document.head.appendChild(newLink)
+      // Add timestamp to force browser to reload favicon (cache-busting)
+      const separator = faviconUrl.includes('?') ? '&' : '?'
+      const timestampedUrl = `${faviconUrl}${separator}v=${Date.now()}`
+      
+      // Add new favicon links with multiple rel types for better compatibility
+      const iconTypes = ['icon', 'shortcut icon', 'apple-touch-icon']
+      iconTypes.forEach(relType => {
+        const newLink = document.createElement('link')
+        newLink.rel = relType
+        newLink.type = 'image/x-icon'
+        newLink.href = timestampedUrl
+        document.head.appendChild(newLink)
+      })
     }
 
     // Update title - selalu update dari website_title jika ada
