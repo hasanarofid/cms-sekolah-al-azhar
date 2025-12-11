@@ -22,6 +22,7 @@ import { AcademicCalendarSection } from './AcademicCalendarSection'
 import { BOSReportSection } from './BOSReportSection'
 import { ContactSection } from './ContactSection'
 import { MapsSection } from './MapsSection'
+import { BrosurSection } from './BrosurSection'
 import { parseImages } from '../lib/utils-images'
 import { getImageUrl, getImageUrls } from '../lib/utils-image-url'
 
@@ -649,6 +650,18 @@ export function SectionRenderer({
     )
   }
 
+  // Brosur Section
+  if (section.type === 'brosur-section') {
+    return (
+      <BrosurSection
+        key={section.id}
+        section={section}
+        locale={locale}
+      />
+    )
+  }
+
+  // Render null if section type is not recognized
   return null
 }
 

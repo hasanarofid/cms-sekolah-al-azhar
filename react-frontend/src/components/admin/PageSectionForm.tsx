@@ -21,7 +21,7 @@ import { RichTextEditor } from './RichTextEditor'
 import { Select2 } from './Select2'
 
 const sectionSchema = z.object({
-  type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'news-section', 'faq', 'accreditation', 'navigation-grid', 'program-cards', 'facility-gallery', 'extracurricular-detail', 'organization-structure', 'student-achievements', 'curriculum-table', 'academic-calendar', 'bos-report', 'contact', 'maps']),
+  type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'news-section', 'faq', 'accreditation', 'navigation-grid', 'program-cards', 'facility-gallery', 'extracurricular-detail', 'organization-structure', 'student-achievements', 'curriculum-table', 'academic-calendar', 'bos-report', 'contact', 'maps', 'brosur-section']),
   title: z.string().optional(),
   titleEn: z.string().optional(),
   subtitle: z.string().optional(),
@@ -561,6 +561,7 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
             { value: 'bos-report', label: 'BOS Report (Laporan Realisasi BOS)' },
             { value: 'contact', label: 'Contact (Kontak)' },
             { value: 'maps', label: 'Maps (Peta)' },
+            { value: 'brosur-section', label: 'Brosur Section (Section Brosur)' },
           ]}
           placeholder="Pilih tipe section..."
           isSearchable={true}
@@ -1032,7 +1033,7 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
       )}
 
       {/* Single Image Upload */}
-      {(sectionType === 'motto' || sectionType === 'video-profile' || sectionType === 'admission' || sectionType === 'split-screen' || sectionType === 'masjid-al-fatih' || sectionType === 'university-map' || sectionType === 'global-stage' || sectionType === 'news-section' || sectionType === 'faq' || sectionType === 'accreditation') && (
+      {(sectionType === 'motto' || sectionType === 'video-profile' || sectionType === 'admission' || sectionType === 'split-screen' || sectionType === 'masjid-al-fatih' || sectionType === 'university-map' || sectionType === 'global-stage' || sectionType === 'news-section' || sectionType === 'faq' || sectionType === 'accreditation' || sectionType === 'brosur-section') && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Gambar Utama
@@ -1052,6 +1053,15 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
               >
                 <X size={18} />
               </button>
+              {sectionType === 'brosur-section' && previewImage && (
+                <a
+                  href={previewImage}
+                  download
+                  className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors"
+                >
+                  <Upload size={18} />
+                </a>
+              )}
             </div>
           ) : (
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
@@ -1159,7 +1169,7 @@ export function PageSectionForm({ pageId, section, onSuccess, onCancel }: PageSe
       )}
 
       {/* Button Fields */}
-      {(sectionType !== 'university-map' && sectionType !== 'masjid-al-fatih' && sectionType !== 'news-section') && (
+      {(sectionType !== 'university-map' && sectionType !== 'masjid-al-fatih' && sectionType !== 'news-section' && sectionType !== 'brosur-section') && (
         <>
           <div className="grid grid-cols-2 gap-4">
             <div>

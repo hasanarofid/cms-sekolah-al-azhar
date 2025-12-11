@@ -17,7 +17,7 @@ import { FlashMessage } from './FlashMessage'
 import { RichTextEditor } from './RichTextEditor'
 
 const sectionSchema = z.object({
-  type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'faq', 'figures', 'partnerships', 'news-section', 'maps']),
+  type: z.enum(['motto', 'video-profile', 'admission', 'feature', 'split-screen', 'masjid-al-fatih', 'university-map', 'global-stage', 'faq', 'figures', 'partnerships', 'news-section', 'maps', 'browser-section']),
   title: z.string().optional(),
   titleEn: z.string().optional(),
   subtitle: z.string().optional(),
@@ -479,6 +479,7 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
             { value: 'partnerships', label: 'Partnerships / Kerjasama' },
             { value: 'news-section', label: 'News Section (Berita)' },
             { value: 'maps', label: 'Maps (Peta)' },
+            { value: 'browser-section', label: 'Browser Section (Section Browser)' },
           ]}
           placeholder="Pilih tipe section..."
           isSearchable={true}
@@ -620,7 +621,7 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
       )}
 
       {/* Single Image Upload */}
-      {(sectionType === 'motto' || sectionType === 'video-profile' || sectionType === 'admission' || sectionType === 'split-screen' || sectionType === 'masjid-al-fatih' || sectionType === 'university-map' || sectionType === 'global-stage' || sectionType === 'faq' || sectionType === 'figures') && (
+      {(sectionType === 'motto' || sectionType === 'video-profile' || sectionType === 'admission' || sectionType === 'split-screen' || sectionType === 'masjid-al-fatih' || sectionType === 'university-map' || sectionType === 'global-stage' || sectionType === 'faq' || sectionType === 'figures' || sectionType === 'browser-section') && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Gambar Utama
@@ -640,6 +641,15 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
               >
                 <X size={18} />
               </button>
+              {sectionType === 'browser-section' && previewImage && (
+                <a
+                  href={previewImage}
+                  download
+                  className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors"
+                >
+                  <Upload size={18} />
+                </a>
+              )}
             </div>
           ) : (
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
@@ -870,7 +880,7 @@ export function HomeSectionForm({ section, defaultType }: HomeSectionFormProps) 
       )}
 
       {/* Button Fields */}
-      {(sectionType !== 'university-map' && sectionType !== 'masjid-al-fatih') && (
+      {(sectionType !== 'university-map' && sectionType !== 'masjid-al-fatih' && sectionType !== 'browser-section') && (
         <>
           <div className="grid grid-cols-2 gap-4">
             <div>
